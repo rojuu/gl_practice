@@ -13,7 +13,7 @@ set GLEW_BIN=%GLEW%\bin\Release\%TARGET%
 set GLEW_INC=%GLEW%\include
 set GLEW_LIB=%GLEW%\lib\Release\%TARGET%
 
-set CommonCompilerFlags=/Zi /EHsc /nologo /FC /I%SDL_INC%
+set CommonCompilerFlags=/Zi /EHsc /nologo /FC /I%SDL_INC% /I%GLEW_INC%
 
 set CommonLinkerFlags=/DEBUG /LIBPATH:%SDL_LIB% /LIBPATH:%GLEW_LIB% SDL2.lib SDL2main.lib glew32.lib opengl32.lib
 
