@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "SDL.h"
 #include "GL/glew.h"
+#include "glm/vec3.hpp"
 
 #include "util.h"
 
