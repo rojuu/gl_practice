@@ -269,7 +269,7 @@ main(int argc, char **argv) {
 	glewInit();
 #endif
 
-	GLuint programID = LoadShaders("shaders/basic.verts", "shaders/basic.frags");
+	GLuint programID = LoadShaders("shaders/basic.v", "shaders/basic.f");
 	if(programID == 0){
 		println("Error loading shaders.");
 		return -1;
