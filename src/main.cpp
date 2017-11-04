@@ -14,11 +14,11 @@
 #include "util.h"
 
 GLuint LoadShaders(const char * vertex_file_path, const char * fragment_file_path){
-	
+
 	// Create the shaders
 	GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
 	GLuint FragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
-	
+
 	// Read the Vertex Shader code from the file
 	std::string VertexShaderCode;
 	std::ifstream VertexShaderStream(vertex_file_path, std::ios::in);
@@ -31,7 +31,7 @@ GLuint LoadShaders(const char * vertex_file_path, const char * fragment_file_pat
 		println("Cannot open %s", vertex_file_path);
 		return 0;
 	}
-	
+
 	// Read the Fragment Shader code from the file
 	std::string FragmentShaderCode;
 	std::ifstream FragmentShaderStream(fragment_file_path, std::ios::in);
@@ -44,17 +44,17 @@ GLuint LoadShaders(const char * vertex_file_path, const char * fragment_file_pat
 		println("Cannot open %s", fragment_file_path);
 		return 0;
 	}
-	
+
 	GLint Result = GL_FALSE;
 	int InfoLogLength;
-	
-	
+
+
 	// Compile Vertex Shader
 	printf("Compiling shader : %s\n", vertex_file_path);
 	char const * VertexSourcePointer = VertexShaderCode.c_str();
 	glShaderSource(VertexShaderID, 1, &VertexSourcePointer , NULL);
 	glCompileShader(VertexShaderID);
-	
+
 	// Check Vertex Shader
 	glGetShaderiv(VertexShaderID, GL_COMPILE_STATUS, &Result);
 	glGetShaderiv(VertexShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
@@ -63,15 +63,15 @@ GLuint LoadShaders(const char * vertex_file_path, const char * fragment_file_pat
 		glGetShaderInfoLog(VertexShaderID, InfoLogLength, NULL, &VertexShaderErrorMessage[0]);
 		printf("%s\n", &VertexShaderErrorMessage[0]);
 	}
-	
-	
-	
+
+
+
 	// Compile Fragment Shader
 	printf("Compiling shader : %s\n", fragment_file_path);
 	char const * FragmentSourcePointer = FragmentShaderCode.c_str();
 	glShaderSource(FragmentShaderID, 1, &FragmentSourcePointer , NULL);
 	glCompileShader(FragmentShaderID);
-	
+
 	// Check Fragment Shader
 	glGetShaderiv(FragmentShaderID, GL_COMPILE_STATUS, &Result);
 	glGetShaderiv(FragmentShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
@@ -80,16 +80,16 @@ GLuint LoadShaders(const char * vertex_file_path, const char * fragment_file_pat
 		glGetShaderInfoLog(FragmentShaderID, InfoLogLength, NULL, &FragmentShaderErrorMessage[0]);
 		printf("%s\n", &FragmentShaderErrorMessage[0]);
 	}
-	
-	
-	
+
+
+
 	// Link the program
 	printf("Linking program\n");
 	GLuint ProgramID = glCreateProgram();
 	glAttachShader(ProgramID, VertexShaderID);
 	glAttachShader(ProgramID, FragmentShaderID);
 	glLinkProgram(ProgramID);
-	
+
 	// Check the program
 	glGetProgramiv(ProgramID, GL_LINK_STATUS, &Result);
 	glGetProgramiv(ProgramID, GL_INFO_LOG_LENGTH, &InfoLogLength);
@@ -98,14 +98,14 @@ GLuint LoadShaders(const char * vertex_file_path, const char * fragment_file_pat
 		glGetProgramInfoLog(ProgramID, InfoLogLength, NULL, &ProgramErrorMessage[0]);
 		printf("%s\n", &ProgramErrorMessage[0]);
 	}
-	
-	
+
+
 	glDetachShader(ProgramID, VertexShaderID);
 	glDetachShader(ProgramID, FragmentShaderID);
-	
+
 	glDeleteShader(VertexShaderID);
 	glDeleteShader(FragmentShaderID);
-	
+
 	return ProgramID;
 }
 
@@ -158,7 +158,7 @@ static const GLfloat g_vertex_buffer_cube[] = {
 	1.0f,-1.0f, 1.0f
 };
 
-// One color for each vertex. They were generated randomly. 
+// One color for each vertex. They were generated randomly.
 static GLfloat g_color_buffer_cube[] = {
 	0.583f,  0.771f,  0.014f,
 	0.609f,  0.115f,  0.436f,
@@ -198,6 +198,13 @@ static GLfloat g_color_buffer_cube[] = {
 	0.982f,  0.099f,  0.879f
 };
 
+glm::vec3 sphericalToCartesian(float radius, float longtitude, float latitude) {
+	float x = radius * glm::cos(latitude) * glm::cos(longtitude);
+	float y = radius * glm::sin(latitude);
+	float z = radius * glm::cos(latitude) * glm::sin(longtitude) * -1;
+	return glm::vec3(x,y,z);
+}
+
 void ExitCleanUp() {
 	SDL_Quit();
 }
@@ -207,55 +214,55 @@ int main(int argc, char **argv) {
 		println("SDL_Error: %c\n", SDL_GetError());
 		return -1;
 	}
-	
+
 	atexit(ExitCleanUp);
-	
+
 	SDL_Window* window = SDL_CreateWindow(
-		"GL_TEST", 
+		"GL_TEST",
 		SDL_WINDOWPOS_CENTERED,
 		SDL_WINDOWPOS_CENTERED,
 		SCREEN_WIDTH, SCREEN_HEIGHT,
 		SDL_WINDOW_OPENGL
-		);
-	
+	);
+
 	if(!window){
 		println("SDL_Error: %c\n", SDL_GetError());
 		return -1;
 	}
 	SDL_GLContext context = SDL_GL_CreateContext(window);
-	
+
 	SDL_GL_SetAttribute(
-		SDL_GL_CONTEXT_PROFILE_MASK, 
+		SDL_GL_CONTEXT_PROFILE_MASK,
 		SDL_GL_CONTEXT_PROFILE_CORE
 		);
-	
+
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-	
+
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-	
+
 	SDL_GL_SetSwapInterval(1);
-	
+
 #if 0
 	GLuint VertexArrayID;
 	glGenVertexArrays(1, &VertexArrayID);
 	glBindVertexArray(VertexArrayID);
 #endif
-	
+
 #ifndef __APPLE__
 	glewExperimental = GL_TRUE;
 	glewInit();
 #endif
-	
+
 	GLuint programID = LoadShaders("shaders/basic.verts", "shaders/basic.frags");
 	if(programID == 0){
 		println("Error loading shaders.");
 		return -1;
 	}
-	
+
 	srand (time(NULL));
 
-	for (int v = 0; v < 12*3 ; v++) {
+	for (int v = 0; v < 12*3; v++) {
 		g_color_buffer_cube[3*v+0] = (float)rand() / (float)RAND_MAX;
 		g_color_buffer_cube[3*v+1] = (float)rand() / (float)RAND_MAX;
 		g_color_buffer_cube[3*v+2] = (float)rand() / (float)RAND_MAX;
@@ -265,12 +272,14 @@ int main(int argc, char **argv) {
 	glGenBuffers(1, &vertexbuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_cube), g_vertex_buffer_cube, GL_STATIC_DRAW);
-	
+
 	GLuint colorbuffer;
 	glGenBuffers(1, &colorbuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(g_color_buffer_cube), g_color_buffer_cube, GL_STATIC_DRAW);
 
+
+	glm::vec3 cameraVector = glm::vec3(0,0,0);
 
 	// Enable depth test
 	glEnable(GL_DEPTH_TEST);
@@ -281,51 +290,62 @@ int main(int argc, char **argv) {
 	glClear(GL_COLOR_BUFFER_BIT);
 	SDL_GL_SwapWindow(window);
 
-	float currentTime = (float)SDL_GetPerformanceCounter() / 
+	float radius = 10, longtitude = 0, latitude = 0.08;
+
+	float currentTime = (float)SDL_GetPerformanceCounter() /
 							(float)SDL_GetPerformanceFrequency();
 	float lastTime = 0;
 	float deltaTime = 0;
 	bool running = true;
-	while (running)
-	{
+	while (running) {
 		lastTime = currentTime;
-		currentTime = (float)SDL_GetPerformanceCounter() / 
+		currentTime = (float)SDL_GetPerformanceCounter() /
 						(float)SDL_GetPerformanceFrequency();
 		deltaTime = (float)(currentTime - lastTime);
 
 		SDL_Event event;
-		while (SDL_PollEvent(&event))
-		{
-			if (event.type == SDL_QUIT){
-				running = false;
-			}
-			
-			if (event.type == SDL_KEYDOWN)
-			{
-				switch (event.key.keysym.sym)
-				{
-					case SDLK_ESCAPE:
+		while (SDL_PollEvent(&event)) {
+			switch (event.type) {
+				case SDL_QUIT: {
 					running = false;
-					break;
-					default:
-					break;
-				}
+				} break;
+
+				case SDL_KEYDOWN: {
+					switch (event.key.keysym.sym) {
+						case SDLK_ESCAPE:
+							running = false;
+							break;
+					}
+				} break;
+
+				case SDL_MOUSEMOTION: {
+					float sens = 0.005f;
+					longtitude -= (float)event.motion.xrel * sens;
+					latitude -= (float)event.motion.yrel * sens;
+				} break;
+
+				case SDL_MOUSEWHEEL: {
+					radius -= (float)event.wheel.y;
+				} break;
 			}
 		}
-		
+
+		printf("longt %f, lat %f, r %f\n", longtitude, latitude, radius);
 		glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		
-		glm::mat4 Projection = glm::perspective(glm::radians(90.0f), 
+
+		glm::mat4 Projection = glm::perspective(glm::radians(90.0f),
 			(float) SCREEN_WIDTH / (float) SCREEN_HEIGHT, 0.1f, 100.0f);
-		
+
+
+		cameraVector = sphericalToCartesian(radius, longtitude, latitude);
 		glm::mat4 View = glm::lookAt(
-			glm::vec3(4,3,-3),
+			cameraVector,
 			glm::vec3(0,0,0),
 			glm::vec3(0,1,0)
-			);
-		
-		glm::mat4 Model = glm::mat4(1.0f);
+		);
+
+		glm::mat4 Model = glm::translate(glm::mat4(1.0f), glm::vec3(0,0,0));
 		glm::mat4 mvp = Projection * View * Model;
 
 		GLuint mvp_handle = glGetUniformLocation(programID, "MVP");
@@ -333,7 +353,7 @@ int main(int argc, char **argv) {
 		glUniformMatrix4fv(mvp_handle, 1, GL_FALSE, &mvp[0][0]);
 
 		glUseProgram(programID);
-		
+
 		// 1rst attribute buffer : vertices
 		glEnableVertexAttribArray(0);
 		glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
@@ -362,23 +382,18 @@ int main(int argc, char **argv) {
 
 		SDL_GL_SwapWindow(window);
 
-		for (int v = 0; v < 12*3 ; v++) {
-			g_color_buffer_cube[3*v+0] += deltaTime;
-			g_color_buffer_cube[3*v+1] += deltaTime;
-			g_color_buffer_cube[3*v+2] += deltaTime;
-
-
-			g_color_buffer_cube[3 * v + 0] = fmod(g_color_buffer_cube[3 * v + 0], 1);
-			g_color_buffer_cube[3 * v + 1] = fmod(g_color_buffer_cube[3 * v + 1], 1);
-			g_color_buffer_cube[3 * v + 2] = fmod(g_color_buffer_cube[3 * v + 2], 1);
+		for (int v = 0; v < 12*3; v++) {
+			g_color_buffer_cube[3*v+0] = fmod(g_color_buffer_cube[3*v+0] + deltaTime, 1);
+			g_color_buffer_cube[3*v+1] = fmod(g_color_buffer_cube[3*v+1] + deltaTime, 1);
+			g_color_buffer_cube[3*v+2] = fmod(g_color_buffer_cube[3*v+2] + deltaTime, 1);
 		}
-	
+
 		glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(g_color_buffer_cube), g_color_buffer_cube, GL_STATIC_DRAW);
 	}
-	
+
 	SDL_GL_DeleteContext(context);
-	
+
 	SDL_DestroyWindow(window);
 	return 0;
 }
