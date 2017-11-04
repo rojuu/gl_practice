@@ -1,6 +1,7 @@
 #include <stdarg.h>
 
-void print(char *format, ...)
+void
+print(char *format, ...)
 {
 	va_list args;
 
@@ -9,7 +10,8 @@ void print(char *format, ...)
 	va_end(args);
 }
 
-void println(char *format, ...)
+void
+println(char *format, ...)
 {
 	va_list args;
 

@@ -13,7 +13,10 @@
 
 #include "util.h"
 
-GLuint LoadShaders(const char * vertex_file_path, const char * fragment_file_path){
+const float pi = glm::pi<float>();
+
+GLuint
+LoadShaders(const char * vertex_file_path, const char * fragment_file_path){
 
 	// Create the shaders
 	GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
@@ -198,18 +201,28 @@ static GLfloat g_color_buffer_cube[] = {
 	0.982f,  0.099f,  0.879f
 };
 
-glm::vec3 sphericalToCartesian(float radius, float longtitude, float latitude) {
+inline float 
+clamp(float value, float min, float max) {
+	if(value < min) value = min;
+	if(value > max) value = max;
+	return value;
+}
+
+inline glm::vec3
+sphericalToCartesian(float radius, float longtitude, float latitude) {
 	float x = radius * glm::cos(latitude) * glm::cos(longtitude);
 	float y = radius * glm::sin(latitude);
 	float z = radius * glm::cos(latitude) * glm::sin(longtitude) * -1;
 	return glm::vec3(x,y,z);
 }
 
-void ExitCleanUp() {
+void
+ExitCleanUp() {
 	SDL_Quit();
 }
 
-int main(int argc, char **argv) {
+int
+main(int argc, char **argv) {
 	if(SDL_Init(SDL_INIT_EVERYTHING) < 0){
 		println("SDL_Error: %c\n", SDL_GetError());
 		return -1;
@@ -224,6 +237,8 @@ int main(int argc, char **argv) {
 		SCREEN_WIDTH, SCREEN_HEIGHT,
 		SDL_WINDOW_OPENGL
 	);
+
+	SDL_SetRelativeMouseMode(SDL_TRUE);
 
 	if(!window){
 		println("SDL_Error: %c\n", SDL_GetError());
@@ -320,12 +335,15 @@ int main(int argc, char **argv) {
 
 				case SDL_MOUSEMOTION: {
 					float sens = 0.005f;
+					float lim = 0.01f;
 					longtitude -= (float)event.motion.xrel * sens;
-					latitude -= (float)event.motion.yrel * sens;
+					latitude += (float)event.motion.yrel * sens;
+					latitude = clamp(latitude, -pi/2 + lim, pi/2 - lim);
 				} break;
 
 				case SDL_MOUSEWHEEL: {
 					radius -= (float)event.wheel.y;
+					radius = clamp(radius, 1, 100);
 				} break;
 			}
 		}
@@ -382,11 +400,13 @@ int main(int argc, char **argv) {
 
 		SDL_GL_SwapWindow(window);
 
+		#if 0
 		for (int v = 0; v < 12*3; v++) {
 			g_color_buffer_cube[3*v+0] = fmod(g_color_buffer_cube[3*v+0] + deltaTime, 1);
 			g_color_buffer_cube[3*v+1] = fmod(g_color_buffer_cube[3*v+1] + deltaTime, 1);
 			g_color_buffer_cube[3*v+2] = fmod(g_color_buffer_cube[3*v+2] + deltaTime, 1);
 		}
+		#endif
 
 		glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(g_color_buffer_cube), g_color_buffer_cube, GL_STATIC_DRAW);
