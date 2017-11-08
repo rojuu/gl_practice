@@ -2,14 +2,18 @@
 SETLOCAL
 set TARGET=x64
 
+set SDL2=%CD%\libs\SDL2-2.0.5
 set SDL_INC=%SDL2%\include
 set SDL_LIB=%SDL2%\lib\%TARGET%
-set GLEW=C:\glew-2.0.0
+
+set GLEW=%CD%\libs\glew-2.0.0
 set GLEW_BIN=%GLEW%\bin\Release\%TARGET%
 set GLEW_INC=%GLEW%\include
 set GLEW_LIB=%GLEW%\lib\Release\%TARGET%
 
-set CommonCompilerFlags=/Zi /Od /EHsc /nologo /FC /I%SDL_INC% /I%GLEW_INC%
+set GLM_INC=%CD%\libs\glm-0.9.8.4\glm
+
+set CommonCompilerFlags=/Zi /Od /EHsc /nologo /FC /I%SDL_INC% /I%GLEW_INC% /I%GLM_INC%
 
 set CommonLinkerFlags=/DEBUG /LIBPATH:%SDL_LIB% /LIBPATH:%GLEW_LIB% SDL2.lib SDL2main.lib glew32.lib opengl32.lib
 
