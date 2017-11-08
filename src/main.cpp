@@ -13,9 +13,11 @@
 
 #include "util.h"
 
-const float PI = glm::pi<float>();
+#define internal static
 
-GLuint
+internal const float PI = glm::pi<float>();
+
+internal GLuint
 loadShaders(const char * vertexFilePath, const char * fragmentFilePath) {
 
 	// Create the shaders
@@ -116,13 +118,13 @@ loadShaders(const char * vertexFilePath, const char * fragmentFilePath) {
 #define SCREEN_HEIGHT 768
 
 // An array of 3 vectors which represents 3 vertices
-static const GLfloat vertexBufferTriangle[] = {
+internal const GLfloat vertexBufferTriangle[] = {
 	-1.0f, -1.0f, 0.0f,
 	1.0f, -1.0f, 0.0f,
 	0.0f,  1.0f, 0.0f,
 };
 
-static const GLfloat vertexBufferCube[] = {
+internal const GLfloat vertexBufferCube[] = {
 	-1.0f,-1.0f,-1.0f, // triangle 1 : begin
 	-1.0f,-1.0f, 1.0f,
 	-1.0f, 1.0f, 1.0f, // triangle 1 : end
@@ -162,7 +164,7 @@ static const GLfloat vertexBufferCube[] = {
 };
 
 // One color for each vertex. They were generated randomly.
-static GLfloat colorBufferCube[] = {
+internal GLfloat colorBufferCube[] = {
 	0.583f,  0.771f,  0.014f,
 	0.609f,  0.115f,  0.436f,
 	0.327f,  0.483f,  0.844f,
@@ -201,14 +203,14 @@ static GLfloat colorBufferCube[] = {
 	0.982f,  0.099f,  0.879f
 };
 
-inline float 
+internal inline float
 clamp(float value, float min, float max) {
 	if(value < min) value = min;
 	if(value > max) value = max;
 	return value;
 }
 
-inline glm::vec3
+internal inline glm::vec3
 sphericalToCartesian(float radius, float longtitude, float latitude) {
 	float x = radius * glm::cos(latitude) * glm::cos(longtitude);
 	float y = radius * glm::sin(latitude);
@@ -245,7 +247,7 @@ main(int argc, char **argv) {
 	SDL_GL_SetAttribute(
 		SDL_GL_CONTEXT_PROFILE_MASK,
 		SDL_GL_CONTEXT_PROFILE_CORE
-		);
+	);
 
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
@@ -346,23 +348,22 @@ main(int argc, char **argv) {
 			}
 		}
 
-		//printf("longt %f, lat %f, r %f\n", longtitude, latitude, radius);
 		glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+		
 		glm::mat4 projection = glm::perspective(glm::radians(90.0f),
 			(float) SCREEN_WIDTH / (float) SCREEN_HEIGHT, 0.1f, 100.0f);
 
 
 		cameraVector = sphericalToCartesian(radius, longtitude, latitude);
-		glm::mat4 View = glm::lookAt(
+		glm::mat4 view = glm::lookAt(
 			cameraVector,
 			glm::vec3(0,0,0),
 			glm::vec3(0,1,0)
 		);
 
 		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0,0,0));
-		glm::mat4 mvp = projection * View * model;
+		glm::mat4 mvp = projection * view * model;
 
 		GLuint mvpHandle = glGetUniformLocation(programID, "MVP");
 
@@ -396,7 +397,7 @@ main(int argc, char **argv) {
 			(void*)0            // array buffer offset
 		);
 
-		#if 1
+		#if 0
 		printf("deltatime: %f\n", deltaTime);
 		for (int v = 0; v < 12*3; v++) {
 			colorBufferCube[3*v+0] = fmod(colorBufferCube[3*v+0] + deltaTime, 1.f);
@@ -411,7 +412,6 @@ main(int argc, char **argv) {
 	}
 
 	SDL_GL_DeleteContext(context);
-
 	SDL_DestroyWindow(window);
 	return 0;
 }
