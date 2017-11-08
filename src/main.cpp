@@ -15,6 +15,8 @@
 
 #define internal static
 
+#define arrayCount(arr) (sizeof(arr)/sizeof(*arr))
+
 internal const float PI = glm::pi<float>();
 
 internal GLuint
@@ -259,9 +261,9 @@ main(int argc, char **argv) {
 	SDL_GL_SetSwapInterval(1);
 
 #if 0
-	GLuint VertexArrayID;
-	glGenVertexArrays(1, &VertexArrayID);
-	glBindVertexArray(VertexArrayID);
+	GLuint vertexArrayID;
+	glGenVertexArrays(1, &vertexArrayID);
+	glBindVertexArray(vertexArrayID);
 #endif
 
 #ifndef __APPLE__
@@ -375,26 +377,26 @@ main(int argc, char **argv) {
 		glEnableVertexAttribArray(0);
 		glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
 		glVertexAttribPointer(
-			0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
-			3,                  // size
-			GL_FLOAT,           // type
-			GL_FALSE,           // normalized?
-			0,                  // stride
-			(void*)0            // array buffer offset
-			);
-		glDrawArrays(GL_TRIANGLES, 0, 12*3); // 12*3 indices starting at 0 -> 12 triangles -> 6 squares
+			0,					// attribute 0. No particular reason for 0, but must match the layout in the shader.
+			3,					// size
+			GL_FLOAT,			// type
+			GL_FALSE,			// normalized?
+			0,					// stride
+			0					// array buffer offset
+		);
+		glDrawArrays(GL_TRIANGLES, 0, arrayCount(vertexBufferCube)); // 12*3 indices starting at 0 -> 12 triangles -> 6 squares
 		glDisableVertexAttribArray(0);
 
 		// 2nd attribute buffer : colors
 		glEnableVertexAttribArray(1);
 		glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
 		glVertexAttribPointer(
-			1,                  // attribute. No particular reason for 1, but must match the layout in the shader.
-			3,                  // size
-			GL_FLOAT,           // type
-			GL_FALSE,           // normalized?
-			0,                  // stride
-			(void*)0            // array buffer offset
+			1,					// attribute. No particular reason for 1, but must match the layout in the shader.
+			3,					// size
+			GL_FLOAT,			// type
+			GL_FALSE,			// normalized?
+			0,					// stride
+			0					// array buffer offset
 		);
 
 		#if 0
