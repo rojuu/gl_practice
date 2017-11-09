@@ -20,7 +20,7 @@
 internal const float PI = glm::pi<float>();
 
 internal GLuint
-loadShaders(const char * vertexFilePath, const char * fragmentFilePath) {
+ loadShaders(const char * vertexFilePath, const char * fragmentFilePath) {
 
 	// Create the shaders
 	GLuint vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
@@ -329,9 +329,17 @@ main(int argc, char **argv) {
 
 				case SDL_KEYDOWN: {
 					switch (event.key.keysym.sym) {
-						case SDLK_ESCAPE:
+						case SDLK_ESCAPE: {
 							running = false;
-							break;
+						} break;
+
+						case '1': {
+							glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+						} break;
+
+						case '2': {
+							glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+						} break;
 					}
 				} break;
 
