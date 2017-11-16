@@ -13,7 +13,8 @@
 
 #define internal static
 
-#define arrayCount(arr) (sizeof(arr)/sizeof(*arr))
+//#define arrayCount(arr) (sizeof(arr)/sizeof(*arr))
+#define arrayCount(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
 
 internal const float PI = glm::pi<float>();
 
