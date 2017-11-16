@@ -11,8 +11,6 @@
 #include "glm/vec3.hpp"
 #include "glm/gtx/transform.hpp"
 
-#include "util.h"
-
 #define internal static
 
 #define arrayCount(arr) (sizeof(arr)/sizeof(*arr))
@@ -35,7 +33,7 @@ internal GLuint
 			vertexShaderCode += "\n" + Line;
 		vertexShaderStream.close();
 	}else{
-		println("Cannot open %s", vertexFilePath);
+		printf("Cannot open %s\n", vertexFilePath);
 		return 0;
 	}
 
@@ -48,7 +46,7 @@ internal GLuint
 			fragmentShaderCode += "\n" + Line;
 		fragmentShaderStream.close();
 	}else{
-		println("Cannot open %s", fragmentFilePath);
+		printf("Cannot open %s\n", fragmentFilePath);
 		return 0;
 	}
 
@@ -223,7 +221,7 @@ sphericalToCartesian(float radius, float longtitude, float latitude) {
 int
 main(int argc, char **argv) {
 	if(SDL_Init(SDL_INIT_EVERYTHING) < 0){
-		println("SDL_Error: %c\n", SDL_GetError());
+		printf("SDL_Error: %s\n", SDL_GetError());
 		return -1;
 	}
 
@@ -238,7 +236,7 @@ main(int argc, char **argv) {
 	);
 
 	if(!window){
-		println("SDL_Error: %c\n", SDL_GetError());
+		printf("SDL_Error: %s\n", SDL_GetError());
 		return -1;
 	}
 
@@ -273,7 +271,7 @@ main(int argc, char **argv) {
 
 	GLuint programID = loadShaders("shaders/basic.v", "shaders/basic.f");
 	if(programID == 0){
-		println("Error loading shaders.");
+		printf("Error loading shaders.\n");
 		return -1;
 	}
 
