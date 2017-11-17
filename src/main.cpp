@@ -9,7 +9,8 @@
 #include "GL/glew.h"
 #include "glm/glm.hpp"
 #include "glm/vec3.hpp"
-#include "glm/gtx/transform.hpp"
+#include "glm/gtc/type_ptr.hpp"
+#include "glm/gtc/matrix_transform.hpp"
 
 #define internal static
 
@@ -19,7 +20,7 @@
 internal const float PI = glm::pi<float>();
 
 internal GLuint
- loadShaders(const char * vertexFilePath, const char * fragmentFilePath) {
+loadShaders(const char * vertexFilePath, const char * fragmentFilePath) {
 
 	// Create the shaders
 	GLuint vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
@@ -221,7 +222,7 @@ sphericalToCartesian(float radius, float longtitude, float latitude) {
 
 int
 main(int argc, char **argv) {
-	if(SDL_Init(SDL_INIT_EVERYTHING) < 0){
+	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_NOPARACHUTE) < 0){
 		printf("SDL_Error: %s\n", SDL_GetError());
 		return -1;
 	}
@@ -236,7 +237,7 @@ main(int argc, char **argv) {
 		SDL_WINDOW_OPENGL
 	);
 
-	if(!window){
+	if(!window) {
 		printf("SDL_Error: %s\n", SDL_GetError());
 		return -1;
 	}
@@ -245,17 +246,12 @@ main(int argc, char **argv) {
 
 	SDL_GLContext context = SDL_GL_CreateContext(window);
 
-	SDL_GL_SetAttribute(
-		SDL_GL_CONTEXT_PROFILE_MASK,
-		SDL_GL_CONTEXT_PROFILE_CORE
-	);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);	
 
 	SDL_GL_SetSwapInterval(1);
 
@@ -297,9 +293,7 @@ main(int argc, char **argv) {
 
 	glm::vec3 cameraVector = glm::vec3(0,0,0);
 
-	// Enable depth test
 	glEnable(GL_DEPTH_TEST);
-	// Accept fragment if it closer to the camera than the former one
 	glDepthFunc(GL_LESS);
 
 	glClearColor(0.0, 0.0, 0.0, 1.0);
@@ -363,7 +357,6 @@ main(int argc, char **argv) {
 		glm::mat4 projection = glm::perspective(glm::radians(90.0f),
 			(float) SCREEN_WIDTH / (float) SCREEN_HEIGHT, 0.1f, 100.0f);
 
-
 		cameraVector = sphericalToCartesian(radius, longtitude, latitude);
 		glm::mat4 view = glm::lookAt(
 			cameraVector,
@@ -375,36 +368,19 @@ main(int argc, char **argv) {
 		glm::mat4 mvp = projection * view * model;
 
 		GLuint mvpHandle = glGetUniformLocation(programID, "MVP");
-
-		glUniformMatrix4fv(mvpHandle, 1, GL_FALSE, &mvp[0][0]);
+		glUniformMatrix4fv(mvpHandle, 1, GL_FALSE, glm::value_ptr(mvp));
 
 		glUseProgram(programID);
 
-		// 1rst attribute buffer : vertices
 		glEnableVertexAttribArray(0);
 		glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-		glVertexAttribPointer(
-			0,					// attribute 0. No particular reason for 0, but must match the layout in the shader.
-			3,					// size
-			GL_FLOAT,			// type
-			GL_FALSE,			// normalized?
-			0,					// stride
-			0					// array buffer offset
-		);
-		glDrawArrays(GL_TRIANGLES, 0, arrayCount(vertexBufferCube)); // 12*3 indices starting at 0 -> 12 triangles -> 6 squares
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glDrawArrays(GL_TRIANGLES, 0, arrayCount(vertexBufferCube));
 		glDisableVertexAttribArray(0);
 
-		// 2nd attribute buffer : colors
 		glEnableVertexAttribArray(1);
 		glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
-		glVertexAttribPointer(
-			1,					// attribute. No particular reason for 1, but must match the layout in the shader.
-			3,					// size
-			GL_FLOAT,			// type
-			GL_FALSE,			// normalized?
-			0,					// stride
-			0					// array buffer offset
-		);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
 		#if 0
 		printf("deltatime: %f\n", deltaTime);
