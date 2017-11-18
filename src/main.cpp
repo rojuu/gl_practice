@@ -229,6 +229,10 @@ internal f32 colorBufferCube[] = {
 };
 
 struct FPCamera {
+	vec3 position;
+	vec3 direction;
+	f32 speed;
+	f32 eyeHeight;
 };
 
 internal inline f32
@@ -236,6 +240,30 @@ clamp(f32 value, f32 min, f32 max) {
 	if(value < min) value = min;
 	if(value > max) value = max;
 	return value;
+}
+
+vec3
+rotate(vec3 in, vec3 axis, f32 theta) {
+	f32 cosTheta = glm::cos(theta);
+	f32 sinTheta = glm::sin(theta);
+
+	vec3 out = (in * cosTheta) + (glm::cross(axis, in) * sinTheta) + (axis * glm::dot(axis, in)) * (1 - cosTheta);
+
+	return out;
+}
+
+inline f32
+angleBetween(vec3 a, vec3 b) {
+	vec3 da=glm::normalize(a);
+	vec3 db=glm::normalize(b);
+	return glm::acos(glm::dot(da, db));
+}
+
+inline f32
+angleBetween(vec3 a, vec3 b, vec3 origin) {
+	vec3 da=glm::normalize(a-origin);
+	vec3 db=glm::normalize(b-origin);
+	return glm::acos(glm::dot(da, db));
 }
 
 internal inline vec3
@@ -326,6 +354,12 @@ main(i32 argc, char **argv) {
 	glClear(GL_COLOR_BUFFER_BIT);
 	SDL_GL_SwapWindow(window);
 
+	FPCamera fp;
+	fp.position  = vec3(0, 0,  0);
+	fp.direction = vec3(0, 0, -1);
+	fp.speed     = 10;
+	fp.eyeHeight = 3;
+
 	f32 radius = 10, longtitude = 0, latitude = 0.08;
 
 	f32 currentTime = (f32)SDL_GetPerformanceCounter() /
@@ -338,6 +372,8 @@ main(i32 argc, char **argv) {
 		currentTime = (f32)SDL_GetPerformanceCounter() /
 						(f32)SDL_GetPerformanceFrequency();
 		deltaTime = (f32)(currentTime - lastTime);
+
+		vec2 axisInput = vec2(0,0);
 
 		SDL_Event event;
 		while (SDL_PollEvent(&event)) {
@@ -359,6 +395,22 @@ main(i32 argc, char **argv) {
 						case '2': {
 							glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 						} break;
+
+						case 'w': {
+							axisInput += vec2(0,1);
+						} break;
+
+						case 's': {
+							axisInput += vec2(0,-1);
+						} break;
+
+						case 'a': {
+							axisInput += vec2(-1,0);
+						} break;
+
+						case 'd': {
+							axisInput += vec2(1,0);
+						} break;
 					}
 				} break;
 
@@ -377,6 +429,17 @@ main(i32 argc, char **argv) {
 					radius = clamp(radius, 1, 100);
 				} break;
 			}
+		}
+
+		// Movement
+		{
+			vec3 movementInput = vec3(axisInput.x, 0, axisInput.y);
+			movementInput = glm::normalize(movementInput);
+
+			f32 angle = angleBetween(fp.direction, movementInput);
+			movementInput = rotate(movementInput, vec3(0,1,0), angle);
+
+			fp.position += movementInput * fp.speed;
 		}
 
 		glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
