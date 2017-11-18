@@ -26,14 +26,18 @@ typedef uint64_t u64;
 typedef float  f32;
 typedef double f64;
 
-typedef glm::vec1 vec1
-typedef glm::vec2 vec2
-typedef glm::vec3 vec3
-typedef glm::vec4 vec4
+typedef i8  bool8;
+typedef i16 bool16;
+typedef i32 bool32;
+typedef i64 bool64;
 
-typedef glm::mat2 mat2
-typedef glm::mat3 mat3
-typedef glm::mat4 mat4
+typedef glm::vec2 vec2;
+typedef glm::vec3 vec3;
+typedef glm::vec4 vec4;
+
+typedef glm::mat2 mat2;
+typedef glm::mat3 mat3;
+typedef glm::mat4 mat4;
 
 #define internal static
 
@@ -242,8 +246,8 @@ sphericalToCartesian(f32 radius, f32 longtitude, f32 latitude) {
 	return vec3(x,y,z);
 }
 
-int
-main(int argc, char **argv) {
+i32
+main(i32 argc, char **argv) {
 	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_NOPARACHUTE) < 0){
 		printf("SDL_Error: %s\n", SDL_GetError());
 		return -1;
@@ -328,7 +332,7 @@ main(int argc, char **argv) {
 							(f32)SDL_GetPerformanceFrequency();
 	f32 lastTime = 0;
 	f32 deltaTime = 0;
-	bool running = true;
+	bool32 running = true;
 	while (running) {
 		lastTime = currentTime;
 		currentTime = (f32)SDL_GetPerformanceCounter() /
