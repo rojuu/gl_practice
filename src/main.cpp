@@ -11,30 +11,45 @@
 #include "glm/vec3.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtc/matrix_transform.hpp"
+#include <cstdint>
+
+#define i8  int8_t
+#define i16 int16_t
+#define i32 int32_t
+#define i64 int64_t
+
+#define u8  uint8_t
+#define u16 uint16_t
+#define u32 uint32_t
+#define u64 uint64_t
+
+#define f32 float
+#define f64 double
 
 #define internal static
 
 //#define arrayCount(arr) (sizeof(arr)/sizeof(*arr))
 #define arrayCount(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
 
-internal const float PI = glm::pi<float>();
+internal const f32 PI = glm::pi<f32>();
 
-internal GLuint
+internal u32
 loadShaders(const char * vertexFilePath, const char * fragmentFilePath) {
 
 	// Create the shaders
-	GLuint vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
-	GLuint fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
+	u32 vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
+	u32 fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
 
 	// Read the Vertex Shader code from the file
 	std::string vertexShaderCode;
 	std::ifstream vertexShaderStream(vertexFilePath, std::ios::in);
-	if(vertexShaderStream.is_open()){
+	if(vertexShaderStream.is_open()) {
 		std::string Line = "";
-		while(getline(vertexShaderStream, Line))
+		while(getline(vertexShaderStream, Line)) {
 			vertexShaderCode += "\n" + Line;
+		}
 		vertexShaderStream.close();
-	}else{
+	} else {
 		printf("Cannot open %s\n", vertexFilePath);
 		return 0;
 	}
@@ -42,19 +57,19 @@ loadShaders(const char * vertexFilePath, const char * fragmentFilePath) {
 	// Read the Fragment Shader code from the file
 	std::string fragmentShaderCode;
 	std::ifstream fragmentShaderStream(fragmentFilePath, std::ios::in);
-	if(fragmentShaderStream.is_open()){
+	if(fragmentShaderStream.is_open()) {
 		std::string Line = "";
-		while(getline(fragmentShaderStream, Line))
+		while(getline(fragmentShaderStream, Line)) {
 			fragmentShaderCode += "\n" + Line;
+		}
 		fragmentShaderStream.close();
-	}else{
+	} else {
 		printf("Cannot open %s\n", fragmentFilePath);
 		return 0;
 	}
 
 	GLint result = GL_FALSE;
-	int infoLogLength;
-
+	i32 infoLogLength;
 
 	// Compile Vertex Shader
 	printf("Compiling shader : %s\n", vertexFilePath);
@@ -71,8 +86,6 @@ loadShaders(const char * vertexFilePath, const char * fragmentFilePath) {
 		printf("%s\n", &vertexShaderErrorMessage[0]);
 	}
 
-
-
 	// Compile Fragment Shader
 	printf("Compiling shader : %s\n", fragmentFilePath);
 	char const * fragmentSourcePointer = fragmentShaderCode.c_str();
@@ -88,11 +101,9 @@ loadShaders(const char * vertexFilePath, const char * fragmentFilePath) {
 		printf("%s\n", &fragmentShaderErrorMessage[0]);
 	}
 
-
-
 	// Link the program
 	printf("Linking program\n");
-	GLuint programID = glCreateProgram();
+	u32 programID = glCreateProgram();
 	glAttachShader(programID, vertexShaderID);
 	glAttachShader(programID, fragmentShaderID);
 	glLinkProgram(programID);
@@ -105,7 +116,6 @@ loadShaders(const char * vertexFilePath, const char * fragmentFilePath) {
 		glGetProgramInfoLog(programID, infoLogLength, NULL, &programErrorMessage[0]);
 		printf("%s\n", &programErrorMessage[0]);
 	}
-
 
 	glDetachShader(programID, vertexShaderID);
 	glDetachShader(programID, fragmentShaderID);
@@ -120,13 +130,13 @@ loadShaders(const char * vertexFilePath, const char * fragmentFilePath) {
 #define SCREEN_HEIGHT 768
 
 // An array of 3 vectors which represents 3 vertices
-internal const GLfloat vertexBufferTriangle[] = {
+internal const f32 vertexBufferTriangle[] = {
 	-1.0f, -1.0f, 0.0f,
 	1.0f, -1.0f, 0.0f,
 	0.0f,  1.0f, 0.0f,
 };
 
-internal const GLfloat vertexBufferCube[] = {
+internal const f32 vertexBufferCube[] = {
 	-1.0f,-1.0f,-1.0f, // triangle 1 : begin
 	-1.0f,-1.0f, 1.0f,
 	-1.0f, 1.0f, 1.0f, // triangle 1 : end
@@ -166,7 +176,7 @@ internal const GLfloat vertexBufferCube[] = {
 };
 
 // One color for each vertex. They were generated randomly.
-internal GLfloat colorBufferCube[] = {
+internal f32 colorBufferCube[] = {
 	0.583f,  0.771f,  0.014f,
 	0.609f,  0.115f,  0.436f,
 	0.327f,  0.483f,  0.844f,
@@ -205,18 +215,18 @@ internal GLfloat colorBufferCube[] = {
 	0.982f,  0.099f,  0.879f
 };
 
-internal inline float
-clamp(float value, float min, float max) {
+internal inline f32
+clamp(f32 value, f32 min, f32 max) {
 	if(value < min) value = min;
 	if(value > max) value = max;
 	return value;
 }
 
 internal inline glm::vec3
-sphericalToCartesian(float radius, float longtitude, float latitude) {
-	float x = radius * glm::cos(latitude) * glm::cos(longtitude);
-	float y = radius * glm::sin(latitude);
-	float z = radius * glm::cos(latitude) * glm::sin(longtitude) * -1;
+sphericalToCartesian(f32 radius, f32 longtitude, f32 latitude) {
+	f32 x = radius * glm::cos(latitude) * glm::sin(longtitude);
+	f32 y = radius * glm::sin(latitude);
+	f32 z = radius * glm::cos(latitude) * glm::cos(longtitude);
 	return glm::vec3(x,y,z);
 }
 
@@ -256,7 +266,7 @@ main(int argc, char **argv) {
 	SDL_GL_SetSwapInterval(1);
 
 #if 0
-	GLuint vertexArrayID;
+	u32 vertexArrayID;
 	glGenVertexArrays(1, &vertexArrayID);
 	glBindVertexArray(vertexArrayID);
 #endif
@@ -266,7 +276,7 @@ main(int argc, char **argv) {
 	glewInit();
 #endif
 
-	GLuint programID = loadShaders("shaders/basic.v", "shaders/basic.f");
+	u32 programID = loadShaders("shaders/basic.v", "shaders/basic.f");
 	if(programID == 0){
 		printf("Error loading shaders.\n");
 		return -1;
@@ -274,24 +284,24 @@ main(int argc, char **argv) {
 
 	srand(time(NULL));
 
-	for (int v = 0; v < 12*3; v++) {
-		colorBufferCube[3*v+0] = (float)rand() / (float)RAND_MAX;
-		colorBufferCube[3*v+1] = (float)rand() / (float)RAND_MAX;
-		colorBufferCube[3*v+2] = (float)rand() / (float)RAND_MAX;
+	for (i32  v = 0; v < 12*3; v++) {
+		colorBufferCube[3*v+0] = (f32)rand() / (f32)RAND_MAX;
+		colorBufferCube[3*v+1] = (f32)rand() / (f32)RAND_MAX;
+		colorBufferCube[3*v+2] = (f32)rand() / (f32)RAND_MAX;
 	}
 
-	GLuint vertexbuffer;
+	u32 vertexbuffer;
 	glGenBuffers(1, &vertexbuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertexBufferCube), vertexBufferCube, GL_STATIC_DRAW);
 
-	GLuint colorbuffer;
+	u32 colorbuffer;
 	glGenBuffers(1, &colorbuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(colorBufferCube), colorBufferCube, GL_STATIC_DRAW);
 
 
-	glm::vec3 cameraVector = glm::vec3(0,0,0);
+	glm::vec3 cameraPos = glm::vec3(0,0,0);
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
@@ -300,18 +310,18 @@ main(int argc, char **argv) {
 	glClear(GL_COLOR_BUFFER_BIT);
 	SDL_GL_SwapWindow(window);
 
-	float radius = 10, longtitude = 0, latitude = 0.08;
+	f32 radius = 10, longtitude = 0, latitude = 0.08;
 
-	float currentTime = (float)SDL_GetPerformanceCounter() /
-							(float)SDL_GetPerformanceFrequency();
-	float lastTime = 0;
-	float deltaTime = 0;
+	f32 currentTime = (f32)SDL_GetPerformanceCounter() /
+							(f32)SDL_GetPerformanceFrequency();
+	f32 lastTime = 0;
+	f32 deltaTime = 0;
 	bool running = true;
 	while (running) {
 		lastTime = currentTime;
-		currentTime = (float)SDL_GetPerformanceCounter() /
-						(float)SDL_GetPerformanceFrequency();
-		deltaTime = (float)(currentTime - lastTime);
+		currentTime = (f32)SDL_GetPerformanceCounter() /
+						(f32)SDL_GetPerformanceFrequency();
+		deltaTime = (f32)(currentTime - lastTime);
 
 		SDL_Event event;
 		while (SDL_PollEvent(&event)) {
@@ -336,16 +346,18 @@ main(int argc, char **argv) {
 					}
 				} break;
 
+				#if 0
 				case SDL_MOUSEMOTION: {
-					float sens = 0.005f;
-					float lim = 0.01f;
-					longtitude -= (float)event.motion.xrel * sens;
-					latitude += (float)event.motion.yrel * sens;
+					f32 sens = 0.005f;
+					f32 lim = 0.01f;
+					longtitude -= (f32)event.motion.xrel * sens;
+					latitude += (f32)event.motion.yrel * sens;
 					latitude = clamp(latitude, -PI/2 + lim, PI/2 - lim);
 				} break;
+				#endif
 
 				case SDL_MOUSEWHEEL: {
-					radius -= (float)event.wheel.y;
+					radius -= (f32)event.wheel.y;
 					radius = clamp(radius, 1, 100);
 				} break;
 			}
@@ -353,21 +365,26 @@ main(int argc, char **argv) {
 
 		glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		
-		glm::mat4 projection = glm::perspective(glm::radians(90.0f),
-			(float) SCREEN_WIDTH / (float) SCREEN_HEIGHT, 0.1f, 100.0f);
 
-		cameraVector = sphericalToCartesian(radius, longtitude, latitude);
+		glm::mat4 projection = glm::perspective(glm::radians(90.0f),
+			(f32) SCREEN_WIDTH / (f32) SCREEN_HEIGHT, 0.1f, 100.0f);
+
+		#if 0
+		cameraPos = sphericalToCartesian(radius, longtitude, latitude);
+		#else
+		cameraPos = sphericalToCartesian(10.f, glm::radians(-10.f), glm::radians(30.f));
+		#endif
+
 		glm::mat4 view = glm::lookAt(
-			cameraVector,
+			cameraPos,
 			glm::vec3(0,0,0),
 			glm::vec3(0,1,0)
 		);
 
-		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0,0,0));
+		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(3,0,3));
 		glm::mat4 mvp = projection * view * model;
 
-		GLuint mvpHandle = glGetUniformLocation(programID, "MVP");
+		u32 mvpHandle = glGetUniformLocation(programID, "MVP");
 		glUniformMatrix4fv(mvpHandle, 1, GL_FALSE, glm::value_ptr(mvp));
 
 		glUseProgram(programID);
@@ -384,7 +401,7 @@ main(int argc, char **argv) {
 
 		#if 0
 		printf("deltatime: %f\n", deltaTime);
-		for (int v = 0; v < 12*3; v++) {
+		for (i32 v = 0; v < 12*3; v++) {
 			colorBufferCube[3*v+0] = fmod(colorBufferCube[3*v+0] + deltaTime, 1.f);
 			colorBufferCube[3*v+1] = fmod(colorBufferCube[3*v+1] + deltaTime, 1.f);
 			colorBufferCube[3*v+2] = fmod(colorBufferCube[3*v+2] + deltaTime, 1.f);
