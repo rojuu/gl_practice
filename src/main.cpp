@@ -13,18 +13,27 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include <cstdint>
 
-#define i8  int8_t
-#define i16 int16_t
-#define i32 int32_t
-#define i64 int64_t
+typedef int8_t  i8;
+typedef int16_t i16;
+typedef int32_t i32;
+typedef int64_t i64;
 
-#define u8  uint8_t
-#define u16 uint16_t
-#define u32 uint32_t
-#define u64 uint64_t
+typedef uint8_t  u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef uint64_t u64;
 
-#define f32 float
-#define f64 double
+typedef float  f32;
+typedef double f64;
+
+typedef glm::vec1 vec1
+typedef glm::vec2 vec2
+typedef glm::vec3 vec3
+typedef glm::vec4 vec4
+
+typedef glm::mat2 mat2
+typedef glm::mat3 mat3
+typedef glm::mat4 mat4
 
 #define internal static
 
@@ -215,6 +224,9 @@ internal f32 colorBufferCube[] = {
 	0.982f,  0.099f,  0.879f
 };
 
+struct FPCamera {
+};
+
 internal inline f32
 clamp(f32 value, f32 min, f32 max) {
 	if(value < min) value = min;
@@ -222,12 +234,12 @@ clamp(f32 value, f32 min, f32 max) {
 	return value;
 }
 
-internal inline glm::vec3
+internal inline vec3
 sphericalToCartesian(f32 radius, f32 longtitude, f32 latitude) {
 	f32 x = radius * glm::cos(latitude) * glm::sin(longtitude);
 	f32 y = radius * glm::sin(latitude);
 	f32 z = radius * glm::cos(latitude) * glm::cos(longtitude);
-	return glm::vec3(x,y,z);
+	return vec3(x,y,z);
 }
 
 int
@@ -301,7 +313,7 @@ main(int argc, char **argv) {
 	glBufferData(GL_ARRAY_BUFFER, sizeof(colorBufferCube), colorBufferCube, GL_STATIC_DRAW);
 
 
-	glm::vec3 cameraPos = glm::vec3(0,0,0);
+	vec3 cameraPos = vec3(0,0,0);
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
@@ -366,7 +378,7 @@ main(int argc, char **argv) {
 		glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		glm::mat4 projection = glm::perspective(glm::radians(90.0f),
+		mat4 projection = glm::perspective(glm::radians(90.0f),
 			(f32) SCREEN_WIDTH / (f32) SCREEN_HEIGHT, 0.1f, 100.0f);
 
 		#if 0
@@ -375,14 +387,14 @@ main(int argc, char **argv) {
 		cameraPos = sphericalToCartesian(10.f, glm::radians(-10.f), glm::radians(30.f));
 		#endif
 
-		glm::mat4 view = glm::lookAt(
+		mat4 view = glm::lookAt(
 			cameraPos,
-			glm::vec3(0,0,0),
-			glm::vec3(0,1,0)
+			vec3(0,0,0),
+			vec3(0,1,0)
 		);
 
-		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(3,0,3));
-		glm::mat4 mvp = projection * view * model;
+		mat4 model = glm::translate(mat4(1.0f), vec3(3,0,3));
+		mat4 mvp = projection * view * model;
 
 		u32 mvpHandle = glGetUniformLocation(programID, "MVP");
 		glUniformMatrix4fv(mvpHandle, 1, GL_FALSE, glm::value_ptr(mvp));
