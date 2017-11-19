@@ -31,13 +31,13 @@ typedef i16 bool16;
 typedef i32 bool32;
 typedef i64 bool64;
 
-typedef glm::vec2 vec2;
-typedef glm::vec3 vec3;
-typedef glm::vec4 vec4;
+typedef glm::vec2 v2;
+typedef glm::vec3 v3;
+typedef glm::vec4 v4;
 
-typedef glm::mat2 mat2;
-typedef glm::mat3 mat3;
-typedef glm::mat4 mat4;
+typedef glm::mat2 m2;
+typedef glm::mat3 m3;
+typedef glm::mat4 m4;
 
 #define internal static
 
@@ -229,8 +229,8 @@ internal f32 colorBufferCube[] = {
 };
 
 struct FPCamera {
-	vec3 position;
-	vec3 direction;
+	v3 position;
+	v3 direction;
 	f32 speed;
 	f32 eyeHeight;
 };
@@ -242,36 +242,37 @@ clamp(f32 value, f32 min, f32 max) {
 	return value;
 }
 
-vec3
-rotate(vec3 in, vec3 axis, f32 theta) {
+v3
+rotate(v3 in, v3 axis, f32 theta) {
+	printf("rotating\n");
 	f32 cosTheta = glm::cos(theta);
 	f32 sinTheta = glm::sin(theta);
 
-	vec3 out = (in * cosTheta) + (glm::cross(axis, in) * sinTheta) + (axis * glm::dot(axis, in)) * (1 - cosTheta);
+	v3 out = (in * cosTheta) + (glm::cross(axis, in) * sinTheta) + (axis * glm::dot(axis, in)) * (1 - cosTheta);
 
 	return out;
 }
 
 inline f32
-angleBetween(vec3 a, vec3 b) {
-	vec3 da=glm::normalize(a);
-	vec3 db=glm::normalize(b);
+angleBetween(v3 a, v3 b) {
+	v3 da=glm::normalize(a);
+	v3 db=glm::normalize(b);
 	return glm::acos(glm::dot(da, db));
 }
 
 inline f32
-angleBetween(vec3 a, vec3 b, vec3 origin) {
-	vec3 da=glm::normalize(a-origin);
-	vec3 db=glm::normalize(b-origin);
+angleBetween(v3 a, v3 b, v3 origin) {
+	v3 da=glm::normalize(a-origin);
+	v3 db=glm::normalize(b-origin);
 	return glm::acos(glm::dot(da, db));
 }
 
-internal inline vec3
+internal inline v3
 sphericalToCartesian(f32 radius, f32 longtitude, f32 latitude) {
 	f32 x = radius * glm::cos(latitude) * glm::sin(longtitude);
 	f32 y = radius * glm::sin(latitude);
 	f32 z = radius * glm::cos(latitude) * glm::cos(longtitude);
-	return vec3(x,y,z);
+	return v3(x,y,z);
 }
 
 i32
@@ -345,7 +346,7 @@ main(i32 argc, char **argv) {
 	glBufferData(GL_ARRAY_BUFFER, sizeof(colorBufferCube), colorBufferCube, GL_STATIC_DRAW);
 
 
-	vec3 cameraPos = vec3(0,0,0);
+	v3 cameraPos = v3(0,0,0);
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
@@ -355,8 +356,8 @@ main(i32 argc, char **argv) {
 	SDL_GL_SwapWindow(window);
 
 	FPCamera fp;
-	fp.position  = vec3(0, 0,  0);
-	fp.direction = vec3(0, 0, -1);
+	fp.position  = v3(0, 0,  0);
+	fp.direction = v3(0, 0, -1);
 	fp.speed     = 10;
 	fp.eyeHeight = 3;
 
@@ -373,7 +374,7 @@ main(i32 argc, char **argv) {
 						(f32)SDL_GetPerformanceFrequency();
 		deltaTime = (f32)(currentTime - lastTime);
 
-		vec2 axisInput = vec2(0,0);
+		v2 axisInput = v2(0,0);
 
 		SDL_Event event;
 		while (SDL_PollEvent(&event)) {
@@ -397,19 +398,19 @@ main(i32 argc, char **argv) {
 						} break;
 
 						case 'w': {
-							axisInput += vec2(0,1);
+							axisInput += v2(0,1);
 						} break;
 
 						case 's': {
-							axisInput += vec2(0,-1);
+							axisInput += v2(0,-1);
 						} break;
 
 						case 'a': {
-							axisInput += vec2(-1,0);
+							axisInput += v2(-1,0);
 						} break;
 
 						case 'd': {
-							axisInput += vec2(1,0);
+							axisInput += v2(1,0);
 						} break;
 					}
 				} break;
@@ -433,11 +434,11 @@ main(i32 argc, char **argv) {
 
 		// Movement
 		{
-			vec3 movementInput = vec3(axisInput.x, 0, axisInput.y);
+			v3 movementInput = v3(axisInput.x, 0, axisInput.y);
 			movementInput = glm::normalize(movementInput);
 
 			f32 angle = angleBetween(fp.direction, movementInput);
-			movementInput = rotate(movementInput, vec3(0,1,0), angle);
+			movementInput = rotate(movementInput, v3(0,1,0), angle);
 
 			fp.position += movementInput * fp.speed;
 		}
@@ -445,7 +446,7 @@ main(i32 argc, char **argv) {
 		glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		mat4 projection = glm::perspective(glm::radians(90.0f),
+		m4 projection = glm::perspective(glm::radians(90.0f),
 			(f32) SCREEN_WIDTH / (f32) SCREEN_HEIGHT, 0.1f, 100.0f);
 
 		#if 0
@@ -454,14 +455,14 @@ main(i32 argc, char **argv) {
 		cameraPos = sphericalToCartesian(10.f, glm::radians(-10.f), glm::radians(30.f));
 		#endif
 
-		mat4 view = glm::lookAt(
+		m4 view = glm::lookAt(
 			cameraPos,
-			vec3(0,0,0),
-			vec3(0,1,0)
+			v3(0,0,0),
+			v3(0,1,0)
 		);
 
-		mat4 model = glm::translate(mat4(1.0f), vec3(3,0,3));
-		mat4 mvp = projection * view * model;
+		m4 model = glm::translate(m4(1.0f), v3(3,0,3));
+		m4 mvp = projection * view * model;
 
 		u32 mvpHandle = glGetUniformLocation(programID, "MVP");
 		glUniformMatrix4fv(mvpHandle, 1, GL_FALSE, glm::value_ptr(mvp));
