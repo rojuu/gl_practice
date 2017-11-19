@@ -242,9 +242,15 @@ clamp(f32 value, f32 min, f32 max) {
 	return value;
 }
 
-v3
+// NOTE(roni): Normalize or zero
+internal inline v3
+noz(v3 input) {
+	v3 result = input.x||input.y||input.z ? glm::normalize(input) : v3(0,0,0);
+	return result;
+}
+
+internal v3
 rotate(v3 in, v3 axis, f32 theta) {
-	printf("rotating\n");
 	f32 cosTheta = glm::cos(theta);
 	f32 sinTheta = glm::sin(theta);
 
@@ -255,15 +261,15 @@ rotate(v3 in, v3 axis, f32 theta) {
 
 inline f32
 angleBetween(v3 a, v3 b) {
-	v3 da=glm::normalize(a);
-	v3 db=glm::normalize(b);
+	v3 da=noz(a);
+	v3 db=noz(b);
 	return glm::acos(glm::dot(da, db));
 }
 
 inline f32
 angleBetween(v3 a, v3 b, v3 origin) {
-	v3 da=glm::normalize(a-origin);
-	v3 db=glm::normalize(b-origin);
+	v3 da=noz(a-origin);
+	v3 db=noz(b-origin);
 	return glm::acos(glm::dot(da, db));
 }
 
@@ -356,8 +362,8 @@ main(i32 argc, char **argv) {
 	SDL_GL_SwapWindow(window);
 
 	FPCamera fp;
-	fp.position  = v3(0, 0,  0);
-	fp.direction = v3(0, 0, -1);
+	fp.position  = v3(0, 0, 0);
+	fp.direction = v3(0, 0, 1);
 	fp.speed     = 10;
 	fp.eyeHeight = 3;
 
@@ -435,12 +441,15 @@ main(i32 argc, char **argv) {
 		// Movement
 		{
 			v3 movementInput = v3(axisInput.x, 0, axisInput.y);
-			movementInput = glm::normalize(movementInput);
+			movementInput = noz(movementInput);
 
 			f32 angle = angleBetween(fp.direction, movementInput);
 			movementInput = rotate(movementInput, v3(0,1,0), angle);
 
 			fp.position += movementInput * fp.speed;
+
+			v3 *p = &fp.position;
+			printf("angle: %f, pos: (%f, %f, %f)\n", angle, p->x, p->y, p->z);
 		}
 
 		glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
