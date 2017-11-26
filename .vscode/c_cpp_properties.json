@@ -47,6 +47,8 @@
             "includePath": [
                 "C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/include/*",
                 "C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/atlmfc/include/*",
+                "C:/Program Files (x86)/Microsoft Visual Studio 12.0/VC/include/*",
+                "C:/Program Files (x86)/Microsoft Visual Studio 12.0/VC/atlmfc/include/*",
                 "C:/Program Files (x86)/Windows Kits/8.1/Include/um",
                 "C:/Program Files (x86)/Windows Kits/8.1/Include/shared",
                 "C:/Program Files (x86)/Windows Kits/8.1/Include/winrt",
