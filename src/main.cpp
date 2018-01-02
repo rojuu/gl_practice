@@ -231,8 +231,13 @@ internal f32 colorBufferCube[] = {
 struct FPCamera {
 	v3 position;
 	v3 direction;
+	f32 yaw, pitch;
 	f32 speed;
-	// f32 eyeHeight;
+	f32 eyeHeight;
+};
+
+struct KeyboardInput {
+	b32 left, right, up, down;
 };
 
 internal inline f32
@@ -283,10 +288,6 @@ sphericalToCartesian(f32 radius, f32 longtitude, f32 latitude) {
 	f32 z = radius * glm::cos(latitude) * glm::cos(longtitude);
 	return v3(x,y,z);
 }
-
-struct KeyboardInput {
-	b32 left, right, up, down;
-};
 
 i32
 main(i32 argc, char **argv) {
@@ -362,13 +363,13 @@ main(i32 argc, char **argv) {
 	SDL_GL_SwapWindow(window);
 
 	FPCamera fp;
-	fp.position  = v3(0, 0, -3);
-	fp.direction = v3(0, 0, 1);
-	fp.speed     = 10;
+	fp.position = v3(0, 0, -3);
+	fp.pitch = 0.f;
+	fp.yaw = 90.f;
+	fp.speed = 10.f;
+	fp.eyeHeight = 1.8f;
 
 	KeyboardInput ki = {};
-
-	f32 radius = 10, longtitude = 0, latitude = 0.08;
 
 	f32 currentTime = (f32)SDL_GetPerformanceCounter() /
 							(f32)SDL_GetPerformanceFrequency();
@@ -440,25 +441,31 @@ main(i32 argc, char **argv) {
 					}
 				}
 
-				#if 0
 				case SDL_MOUSEMOTION: {
-					f32 sens = 0.005f;
+					// TODO: Investigate, why pressing w/a/s/d causes really high motion values, in mousemotion
+					if(event.motion.yrel > 100) {
+						break;
+					}
+					if(event.motion.xrel > 100) {
+						break;
+					}
+					f32 sens = 0.1f;
 					f32 lim = 0.01f;
-					longtitude -= (f32)event.motion.xrel * sens;
-					latitude += (f32)event.motion.yrel * sens;
-					latitude = clamp(latitude, -PI/2 + lim, PI/2 - lim);
-				} break;
-				#endif
-
-				case SDL_MOUSEWHEEL: {
-					radius -= (f32)event.wheel.y;
-					radius = clamp(radius, 1, 100);
+					fp.yaw += (f32)event.motion.xrel * sens;
+					fp.yaw = fmod(fp.yaw, 360.f);
+					fp.pitch -= (f32)event.motion.yrel * sens;
+					fp.pitch = clamp(fp.pitch, -90.f + lim, 90.f - lim);
 				} break;
 			}
 		}
 
 		// Movement
 		{
+			fp.direction.x = cos(glm::radians(fp.pitch)) * cos(glm::radians(fp.yaw));
+			fp.direction.y = sin(glm::radians(fp.pitch));
+			fp.direction.z = cos(glm::radians(fp.pitch)) * sin(glm::radians(fp.yaw));
+			fp.direction = noz(fp.direction);
+
 			float y = 0.f;
 			float x = 0.f;
 			if(ki.up) {
@@ -478,8 +485,10 @@ main(i32 argc, char **argv) {
 
 			fp.position += fp.direction * input.y * fp.speed * deltaTime;
 			fp.position += glm::cross(fp.direction, v3(0,1,0)) * input.x * fp.speed * deltaTime;
-			v3 *p = &fp.position;
-			printf("pos: (%f, %f, %f)\r", p->x, p->y, p->z);
+			fp.position.y = fp.eyeHeight;
+
+			v3* pos = &fp.position;
+			// printf("pitch %f, yaw %f, pos.x %f, pos.y %f, pos.z %f\r", fp.pitch, fp.yaw, pos->x, pos->y, pos->z);
 		}
 
 		glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
@@ -487,12 +496,6 @@ main(i32 argc, char **argv) {
 
 		m4 projection = glm::perspective(glm::radians(90.0f),
 			(f32) SCREEN_WIDTH / (f32) SCREEN_HEIGHT, 0.1f, 100.0f);
-
-		// #if 1
-		// cameraPos = sphericalToCartesian(radius, longtitude, latitude);
-		// #else
-		// cameraPos = sphericalToCartesian(10.f, glm::radians(-10.f), glm::radians(30.f));
-		// #endif
 
 		m4 view = glm::lookAt(
 			fp.position,
