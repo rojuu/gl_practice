@@ -232,7 +232,7 @@ struct FPCamera {
 	v3 position;
 	v3 direction;
 	f32 speed;
-	f32 eyeHeight;
+	// f32 eyeHeight;
 };
 
 internal inline f32
@@ -242,10 +242,16 @@ clamp(f32 value, f32 min, f32 max) {
 	return value;
 }
 
-// NOTE(roni): Normalize or zero
+// Normalize or zero
 internal inline v3
 noz(v3 input) {
 	v3 result = input.x||input.y||input.z ? glm::normalize(input) : v3(0,0,0);
+	return result;
+}
+
+internal inline v2
+noz(v2 input) {
+	v2 result = input.x||input.y ? glm::normalize(input) : v2(0,0);
 	return result;
 }
 
@@ -253,10 +259,7 @@ internal v3
 rotate(v3 in, v3 axis, f32 theta) {
 	f32 cosTheta = glm::cos(theta);
 	f32 sinTheta = glm::sin(theta);
-
-	v3 out = (in * cosTheta) + (glm::cross(axis, in) * sinTheta) + (axis * glm::dot(axis, in)) * (1 - cosTheta);
-
-	return out;
+	return (in * cosTheta) + (glm::cross(axis, in) * sinTheta) + (axis * glm::dot(axis, in)) * (1 - cosTheta);
 }
 
 inline f32
@@ -283,11 +286,10 @@ sphericalToCartesian(f32 radius, f32 longtitude, f32 latitude) {
 
 i32
 main(i32 argc, char **argv) {
-	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_NOPARACHUTE) < 0){
+	if(SDL_Init(SDL_INIT_VIDEO) < 0) {
 		printf("SDL_Error: %s\n", SDL_GetError());
 		return -1;
 	}
-
 	atexit(SDL_Quit);
 
 	SDL_Window* window = SDL_CreateWindow(
@@ -316,12 +318,6 @@ main(i32 argc, char **argv) {
 
 	SDL_GL_SetSwapInterval(1);
 
-#if 0
-	u32 vertexArrayID;
-	glGenVertexArrays(1, &vertexArrayID);
-	glBindVertexArray(vertexArrayID);
-#endif
-
 #ifndef __APPLE__
 	glewExperimental = GL_TRUE;
 	glewInit();
@@ -341,14 +337,14 @@ main(i32 argc, char **argv) {
 		colorBufferCube[3*v+2] = (f32)rand() / (f32)RAND_MAX;
 	}
 
-	u32 vertexbuffer;
-	glGenBuffers(1, &vertexbuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+	u32 vertexBuffer;
+	glGenBuffers(1, &vertexBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertexBufferCube), vertexBufferCube, GL_STATIC_DRAW);
 
-	u32 colorbuffer;
-	glGenBuffers(1, &colorbuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
+	u32 colorBuffer;
+	glGenBuffers(1, &colorBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(colorBufferCube), colorBufferCube, GL_STATIC_DRAW);
 
 
@@ -365,7 +361,7 @@ main(i32 argc, char **argv) {
 	fp.position  = v3(0, 0, 0);
 	fp.direction = v3(0, 0, 1);
 	fp.speed     = 10;
-	fp.eyeHeight = 3;
+	// fp.eyeHeight = 3;
 
 	f32 radius = 10, longtitude = 0, latitude = 0.08;
 
@@ -438,18 +434,14 @@ main(i32 argc, char **argv) {
 			}
 		}
 
+		axisInput = noz(axisInput);
+
 		// Movement
 		{
-			v3 movementInput = v3(axisInput.x, 0, axisInput.y);
-			movementInput = noz(movementInput);
-
-			f32 angle = angleBetween(fp.direction, movementInput);
-			movementInput = rotate(movementInput, v3(0,1,0), angle);
-
-			fp.position += movementInput * fp.speed;
-
+			fp.position += fp.direction * axisInput.y * fp.speed * deltaTime;
+			fp.position += glm::cross(fp.direction, v3(0,1,0)) * axisInput.x * fp.speed * deltaTime;
 			v3 *p = &fp.position;
-			printf("angle: %f, pos: (%f, %f, %f)\n", angle, p->x, p->y, p->z);
+			printf("pos: (%f, %f, %f)\r", p->x, p->y, p->z);
 		}
 
 		glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
@@ -458,15 +450,15 @@ main(i32 argc, char **argv) {
 		m4 projection = glm::perspective(glm::radians(90.0f),
 			(f32) SCREEN_WIDTH / (f32) SCREEN_HEIGHT, 0.1f, 100.0f);
 
-		#if 0
-		cameraPos = sphericalToCartesian(radius, longtitude, latitude);
-		#else
-		cameraPos = sphericalToCartesian(10.f, glm::radians(-10.f), glm::radians(30.f));
-		#endif
+		// #if 1
+		// cameraPos = sphericalToCartesian(radius, longtitude, latitude);
+		// #else
+		// cameraPos = sphericalToCartesian(10.f, glm::radians(-10.f), glm::radians(30.f));
+		// #endif
 
 		m4 view = glm::lookAt(
-			cameraPos,
-			v3(0,0,0),
+			fp.position,
+			fp.position + fp.direction,
 			v3(0,1,0)
 		);
 
@@ -479,13 +471,13 @@ main(i32 argc, char **argv) {
 		glUseProgram(programID);
 
 		glEnableVertexAttribArray(0);
-		glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 		glDrawArrays(GL_TRIANGLES, 0, arrayCount(vertexBufferCube));
 		glDisableVertexAttribArray(0);
 
 		glEnableVertexAttribArray(1);
-		glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
 		#if 0
