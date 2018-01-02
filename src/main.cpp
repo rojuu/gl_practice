@@ -344,14 +344,20 @@ main(i32 argc, char **argv) {
 
 	u32 vertexBuffer;
 	glGenBuffers(1, &vertexBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertexBufferCube), vertexBufferCube, GL_STATIC_DRAW);
-
+	u32 vertexArray;
+	glGenVertexArrays(1, &vertexArray);
 	u32 colorBuffer;
 	glGenBuffers(1, &colorBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(colorBufferCube), colorBufferCube, GL_STATIC_DRAW);
 
+	glBindVertexArray(vertexArray);
+	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertexBufferCube), vertexBufferCube, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(colorBufferCube), colorBufferCube, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(1);
 
 	v3 cameraPos = v3(0,0,0);
 
@@ -510,16 +516,20 @@ main(i32 argc, char **argv) {
 		glUniformMatrix4fv(mvpHandle, 1, GL_FALSE, glm::value_ptr(mvp));
 
 		glUseProgram(programID);
-
-		glEnableVertexAttribArray(0);
-		glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glBindVertexArray(vertexArray);
 		glDrawArrays(GL_TRIANGLES, 0, arrayCount(vertexBufferCube));
-		glDisableVertexAttribArray(0);
 
-		glEnableVertexAttribArray(1);
-		glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		// glEnableVertexAttribArray(0);
+		// glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+		// glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		// glDrawArrays(GL_TRIANGLES, 0, arrayCount(vertexBufferCube));
+		// glDisableVertexAttribArray(0);
+
+		// glEnableVertexAttribArray(1);
+		// glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
+		// glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		// glDisableVertexAttribArray(1);
+		// glBufferData(GL_ARRAY_BUFFER, sizeof(colorBufferCube), colorBufferCube, GL_STATIC_DRAW);
 
 		#if 0
 		printf("deltatime: %f\n", deltaTime);
@@ -530,7 +540,8 @@ main(i32 argc, char **argv) {
 		}
 		#endif
 
-		glBufferData(GL_ARRAY_BUFFER, sizeof(colorBufferCube), colorBufferCube, GL_STATIC_DRAW);
+		// glBufferData(GL_ARRAY_BUFFER, sizeof(colorBufferCube), colorBufferCube, GL_STATIC_DRAW);
+		// glDisableVertexAttribArray(1);
 
 		SDL_GL_SwapWindow(window);
 	}
