@@ -284,6 +284,10 @@ sphericalToCartesian(f32 radius, f32 longtitude, f32 latitude) {
 	return v3(x,y,z);
 }
 
+struct KeyboardInput {
+	b32 left, right, up, down;
+};
+
 i32
 main(i32 argc, char **argv) {
 	if(SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -358,10 +362,11 @@ main(i32 argc, char **argv) {
 	SDL_GL_SwapWindow(window);
 
 	FPCamera fp;
-	fp.position  = v3(0, 0, 0);
+	fp.position  = v3(0, 0, -3);
 	fp.direction = v3(0, 0, 1);
 	fp.speed     = 10;
-	// fp.eyeHeight = 3;
+
+	KeyboardInput ki = {};
 
 	f32 radius = 10, longtitude = 0, latitude = 0.08;
 
@@ -375,8 +380,6 @@ main(i32 argc, char **argv) {
 		currentTime = (f32)SDL_GetPerformanceCounter() /
 						(f32)SDL_GetPerformanceFrequency();
 		deltaTime = (f32)(currentTime - lastTime);
-
-		v2 axisInput = v2(0,0);
 
 		SDL_Event event;
 		while (SDL_PollEvent(&event)) {
@@ -400,22 +403,42 @@ main(i32 argc, char **argv) {
 						} break;
 
 						case 'w': {
-							axisInput += v2(0,1);
+							ki.up = true;
 						} break;
 
 						case 's': {
-							axisInput += v2(0,-1);
+							ki.down = true;
 						} break;
 
 						case 'a': {
-							axisInput += v2(-1,0);
+							ki.left = true;
 						} break;
 
 						case 'd': {
-							axisInput += v2(1,0);
+							ki.right = true;
 						} break;
 					}
 				} break;
+
+				case SDL_KEYUP: {
+					switch (event.key.keysym.sym) {
+						case 'w': {
+							ki.up = false;
+						} break;
+
+						case 's': {
+							ki.down = false;
+						} break;
+
+						case 'a': {
+							ki.left = false;
+						} break;
+
+						case 'd': {
+							ki.right = false;
+						} break;
+					}
+				}
 
 				#if 0
 				case SDL_MOUSEMOTION: {
@@ -434,12 +457,27 @@ main(i32 argc, char **argv) {
 			}
 		}
 
-		axisInput = noz(axisInput);
-
 		// Movement
 		{
-			fp.position += fp.direction * axisInput.y * fp.speed * deltaTime;
-			fp.position += glm::cross(fp.direction, v3(0,1,0)) * axisInput.x * fp.speed * deltaTime;
+			float y = 0.f;
+			float x = 0.f;
+			if(ki.up) {
+				y += 1;
+			}
+			if(ki.down) {
+				y -= 1;
+			}
+			if(ki.right) {
+				x += 1;
+			}
+			if(ki.left) {
+				x -= 1;
+			}
+
+			v2 input = noz(v2(x, y));
+
+			fp.position += fp.direction * input.y * fp.speed * deltaTime;
+			fp.position += glm::cross(fp.direction, v3(0,1,0)) * input.x * fp.speed * deltaTime;
 			v3 *p = &fp.position;
 			printf("pos: (%f, %f, %f)\r", p->x, p->y, p->z);
 		}
@@ -462,7 +500,7 @@ main(i32 argc, char **argv) {
 			v3(0,1,0)
 		);
 
-		m4 model = glm::translate(m4(1.0f), v3(3,0,3));
+		m4 model = glm::translate(m4(1.0f), v3(0,0,0));
 		m4 mvp = projection * view * model;
 
 		u32 mvpHandle = glGetUniformLocation(programID, "MVP");
