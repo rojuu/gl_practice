@@ -142,92 +142,6 @@ loadShaders(const char * vertexFilePath, const char * fragmentFilePath) {
 #define SCREEN_WIDTH 1024
 #define SCREEN_HEIGHT 768
 
-// An array of 3 vectors which represents 3 vertices
-internal const f32 vertexBufferTriangle[] = {
-	-1.0f, -1.0f, 0.0f,
-	1.0f, -1.0f, 0.0f,
-	0.0f,  1.0f, 0.0f,
-};
-
-internal const f32 vertexBufferCube[] = {
-	-1.0f,-1.0f,-1.0f, // triangle 1 : begin
-	-1.0f,-1.0f, 1.0f,
-	-1.0f, 1.0f, 1.0f, // triangle 1 : end
-	1.0f, 1.0f,-1.0f, // triangle 2 : begin
-	-1.0f,-1.0f,-1.0f,
-	-1.0f, 1.0f,-1.0f, // triangle 2 : end
-	1.0f,-1.0f, 1.0f,
-	-1.0f,-1.0f,-1.0f,
-	1.0f,-1.0f,-1.0f,
-	1.0f, 1.0f,-1.0f,
-	1.0f,-1.0f,-1.0f,
-	-1.0f,-1.0f,-1.0f,
-	-1.0f,-1.0f,-1.0f,
-	-1.0f, 1.0f, 1.0f,
-	-1.0f, 1.0f,-1.0f,
-	1.0f,-1.0f, 1.0f,
-	-1.0f,-1.0f, 1.0f,
-	-1.0f,-1.0f,-1.0f,
-	-1.0f, 1.0f, 1.0f,
-	-1.0f,-1.0f, 1.0f,
-	1.0f,-1.0f, 1.0f,
-	1.0f, 1.0f, 1.0f,
-	1.0f,-1.0f,-1.0f,
-	1.0f, 1.0f,-1.0f,
-	1.0f,-1.0f,-1.0f,
-	1.0f, 1.0f, 1.0f,
-	1.0f,-1.0f, 1.0f,
-	1.0f, 1.0f, 1.0f,
-	1.0f, 1.0f,-1.0f,
-	-1.0f, 1.0f,-1.0f,
-	1.0f, 1.0f, 1.0f,
-	-1.0f, 1.0f,-1.0f,
-	-1.0f, 1.0f, 1.0f,
-	1.0f, 1.0f, 1.0f,
-	-1.0f, 1.0f, 1.0f,
-	1.0f,-1.0f, 1.0f
-};
-
-// One color for each vertex. They were generated randomly.
-internal f32 colorBufferCube[] = {
-	0.583f,  0.771f,  0.014f,
-	0.609f,  0.115f,  0.436f,
-	0.327f,  0.483f,  0.844f,
-	0.822f,  0.569f,  0.201f,
-	0.435f,  0.602f,  0.223f,
-	0.310f,  0.747f,  0.185f,
-	0.597f,  0.770f,  0.761f,
-	0.559f,  0.436f,  0.730f,
-	0.359f,  0.583f,  0.152f,
-	0.483f,  0.596f,  0.789f,
-	0.559f,  0.861f,  0.639f,
-	0.195f,  0.548f,  0.859f,
-	0.014f,  0.184f,  0.576f,
-	0.771f,  0.328f,  0.970f,
-	0.406f,  0.615f,  0.116f,
-	0.676f,  0.977f,  0.133f,
-	0.971f,  0.572f,  0.833f,
-	0.140f,  0.616f,  0.489f,
-	0.997f,  0.513f,  0.064f,
-	0.945f,  0.719f,  0.592f,
-	0.543f,  0.021f,  0.978f,
-	0.279f,  0.317f,  0.505f,
-	0.167f,  0.620f,  0.077f,
-	0.347f,  0.857f,  0.137f,
-	0.055f,  0.953f,  0.042f,
-	0.714f,  0.505f,  0.345f,
-	0.783f,  0.290f,  0.734f,
-	0.722f,  0.645f,  0.174f,
-	0.302f,  0.455f,  0.848f,
-	0.225f,  0.587f,  0.040f,
-	0.517f,  0.713f,  0.338f,
-	0.053f,  0.959f,  0.120f,
-	0.393f,  0.621f,  0.362f,
-	0.673f,  0.211f,  0.457f,
-	0.820f,  0.883f,  0.371f,
-	0.982f,  0.099f,  0.879f
-};
-
 struct FPCamera {
 	v3 position;
 	v3 direction;
@@ -238,6 +152,11 @@ struct FPCamera {
 
 struct KeyboardInput {
 	b32 left, right, up, down;
+};
+
+struct Mesh {
+	u32 vao;
+	u32 count;
 };
 
 internal inline f32
@@ -312,8 +231,6 @@ main(i32 argc, char **argv) {
 
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 
-	SDL_GLContext context = SDL_GL_CreateContext(window);
-
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -321,43 +238,61 @@ main(i32 argc, char **argv) {
 
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-	SDL_GL_SetSwapInterval(1);
+	SDL_GLContext context = SDL_GL_CreateContext(window);
+
+	SDL_GL_SetSwapInterval(0);
 
 #ifndef __APPLE__
 	glewExperimental = GL_TRUE;
 	glewInit();
 #endif
 
-	u32 programID = loadShaders("shaders/basic.v", "shaders/basic.f");
-	if(programID == 0){
+	u32 shaderProgram = loadShaders("shaders/basic.v", "shaders/basic.f");
+	if(shaderProgram == 0){
 		printf("Error loading shaders.\n");
 		return -1;
 	}
 
-	srand(time(NULL));
+	const f32 triangleVertexBuffer[] = {
+		 -0.5f, -0.5f,  0.0f,
+		  0.5f, -0.5f,  0.0f,
+		  0.0f,  0.5f,  0.0f,
+	};
 
-	for (i32  v = 0; v < 12*3; v++) {
-		colorBufferCube[3*v+0] = (f32)rand() / (f32)RAND_MAX;
-		colorBufferCube[3*v+1] = (f32)rand() / (f32)RAND_MAX;
-		colorBufferCube[3*v+2] = (f32)rand() / (f32)RAND_MAX;
-	}
+	const f32 triangleColorBuffer[] = {
+		 0.0f, 0.0f, 1.0f,
+		 0.0f, 1.0f, 0.0f,
+		 1.0f, 0.0f, 0.0f,
+	};
 
-	u32 vertexBuffer;
-	glGenBuffers(1, &vertexBuffer);
-	u32 vertexArray;
-	glGenVertexArrays(1, &vertexArray);
-	u32 colorBuffer;
-	glGenBuffers(1, &colorBuffer);
+	// TODO: Update the object count when you add more objects to draw
+	const i32 objectCount = 1;
+	Mesh meshArray[objectCount];
 
-	glBindVertexArray(vertexArray);
-	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertexBufferCube), vertexBufferCube, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(colorBufferCube), colorBufferCube, GL_STATIC_DRAW);
-	glEnableVertexAttribArray(1);
+	// Init triangle
+	{
+		u32 vertexArray;
+		glGenVertexArrays(1, &vertexArray);
+
+		u32 vertexBuffer;
+		glGenBuffers(1, &vertexBuffer);
+		u32 colorBuffer;
+		glGenBuffers(1, &colorBuffer);
+
+		glBindVertexArray(vertexArray);
+		glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(triangleVertexBuffer), triangleVertexBuffer, GL_STATIC_DRAW);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(0);
+
+		glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(triangleColorBuffer), triangleColorBuffer, GL_STATIC_DRAW);
+		glEnableVertexAttribArray(1);
+
+		meshArray[0].vao = vertexArray;
+		meshArray[0].count = arrayCount(triangleVertexBuffer) / 3;
+	}	
 
 	v3 cameraPos = v3(0,0,0);
 
@@ -377,28 +312,22 @@ main(i32 argc, char **argv) {
 
 	KeyboardInput keyboardInput = {};
 
-	f32 currentTime = (f32)SDL_GetPerformanceCounter() /
+	f64 currentTime = (f32)SDL_GetPerformanceCounter() /
 							(f32)SDL_GetPerformanceFrequency();
-	f32 lastTime = 0;
-	f32 deltaTime = 0;
-	b32 running = true;
+	f64 lastTime = 0;
+	f64 deltaTime = 0;
 	i32 frameCounter = 0;
 	i32 lastFrameCount = 0;
-	f32 lastFpsTime = 0;
+	b32 running = true;
+	f64 lastFpsTime = 0;
 	while (running) {
 		lastTime = currentTime;
-		currentTime = (f32)SDL_GetPerformanceCounter() /
-						(f32)SDL_GetPerformanceFrequency();
-		deltaTime = (f32)(currentTime - lastTime);
+		currentTime = (f64)SDL_GetPerformanceCounter() /
+						(f64)SDL_GetPerformanceFrequency();
+		deltaTime = (f64)(currentTime - lastTime);
 
-		//TODO: Investigate why deltaTime is zero for majority of frames.
-		// Apparently the SDL_GetPerformanceCounter() function returns the same value for multiple iterations
-		if(deltaTime == 0) { 
-			continue;
-		}
-
+		// Count frames for every second and print it as the title of the window
 		++frameCounter;
-
 		if(currentTime >= (lastFpsTime + 1.f)) {
 			lastFpsTime = currentTime;
 			i32 deltaFrames = frameCounter - lastFrameCount;
@@ -486,6 +415,7 @@ main(i32 argc, char **argv) {
 		}
 
 		// Movement
+		#if 0
 		{
 			fp.direction.x = cos(glm::radians(fp.pitch)) * cos(glm::radians(fp.yaw));
 			fp.direction.y = sin(glm::radians(fp.pitch));
@@ -507,29 +437,41 @@ main(i32 argc, char **argv) {
 
 			v3* pos = &fp.position;
 			// printf("pitch %f, yaw %f, pos.x %f, pos.y %f, pos.z %f\r", fp.pitch, fp.yaw, pos->x, pos->y, pos->z);
-		}
+		} 
+		#endif
 
-		glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
+		// glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
+		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		m4 projection = glm::perspective(glm::radians(90.0f),
 			(f32) SCREEN_WIDTH / (f32) SCREEN_HEIGHT, 0.1f, 100.0f);
 
+		// m4 view = glm::lookAt(
+		// 	fp.position,
+		// 	fp.position + fp.direction,
+		// 	v3(0,1,0)
+		// );
+
 		m4 view = glm::lookAt(
-			fp.position,
-			fp.position + fp.direction,
+			v3(0,0,1),
+			v3(0,0,0),
 			v3(0,1,0)
 		);
 
 		m4 model = glm::translate(m4(1.0f), v3(0,0,0));
 		m4 mvp = projection * view * model;
 
-		u32 mvpHandle = glGetUniformLocation(programID, "MVP");
+		u32 mvpHandle = glGetUniformLocation(shaderProgram, "MVP");
 		glUniformMatrix4fv(mvpHandle, 1, GL_FALSE, glm::value_ptr(mvp));
 
-		glUseProgram(programID);
-		glBindVertexArray(vertexArray);
-		glDrawArrays(GL_TRIANGLES, 0, arrayCount(vertexBufferCube));
+		// Draw stuff
+		for(i32 i = 0; i < objectCount; i++) {
+			glUseProgram(shaderProgram);
+			glBindVertexArray(meshArray[i].vao);
+			glDrawArrays(GL_TRIANGLES, 0, meshArray[i].count);
+		}
 
 		SDL_GL_SwapWindow(window);
 	}
