@@ -375,18 +375,38 @@ main(i32 argc, char **argv) {
 	fp.speed = 10.f;
 	fp.eyeHeight = 1.8f;
 
-	KeyboardInput ki = {};
+	KeyboardInput keyboardInput = {};
 
 	f32 currentTime = (f32)SDL_GetPerformanceCounter() /
 							(f32)SDL_GetPerformanceFrequency();
 	f32 lastTime = 0;
 	f32 deltaTime = 0;
 	b32 running = true;
+	i32 frameCounter = 0;
+	i32 lastFrameCount = 0;
+	f32 lastFpsTime = 0;
 	while (running) {
 		lastTime = currentTime;
 		currentTime = (f32)SDL_GetPerformanceCounter() /
 						(f32)SDL_GetPerformanceFrequency();
 		deltaTime = (f32)(currentTime - lastTime);
+
+		//TODO: Investigate why deltaTime is zero for majority of frames.
+		// Apparently the SDL_GetPerformanceCounter() function returns the same value for multiple iterations
+		if(deltaTime == 0) { 
+			continue;
+		}
+
+		++frameCounter;
+
+		if(currentTime >= (lastFpsTime + 1.f)) {
+			lastFpsTime = currentTime;
+			i32 deltaFrames = frameCounter - lastFrameCount;
+			lastFrameCount = frameCounter;
+			char title[64];
+			sprintf(title, "FPS: %d", deltaFrames);
+			SDL_SetWindowTitle(window, title);
+		}
 
 		SDL_Event event;
 		while (SDL_PollEvent(&event)) {
@@ -410,19 +430,19 @@ main(i32 argc, char **argv) {
 						} break;
 
 						case 'w': {
-							ki.up = true;
+							keyboardInput.up = true;
 						} break;
 
 						case 's': {
-							ki.down = true;
+							keyboardInput.down = true;
 						} break;
 
 						case 'a': {
-							ki.left = true;
+							keyboardInput.left = true;
 						} break;
 
 						case 'd': {
-							ki.right = true;
+							keyboardInput.right = true;
 						} break;
 					}
 				} break;
@@ -430,19 +450,19 @@ main(i32 argc, char **argv) {
 				case SDL_KEYUP: {
 					switch (event.key.keysym.sym) {
 						case 'w': {
-							ki.up = false;
+							keyboardInput.up = false;
 						} break;
 
 						case 's': {
-							ki.down = false;
+							keyboardInput.down = false;
 						} break;
 
 						case 'a': {
-							ki.left = false;
+							keyboardInput.left = false;
 						} break;
 
 						case 'd': {
-							ki.right = false;
+							keyboardInput.right = false;
 						} break;
 					}
 				}
@@ -474,18 +494,10 @@ main(i32 argc, char **argv) {
 
 			float y = 0.f;
 			float x = 0.f;
-			if(ki.up) {
-				y += 1;
-			}
-			if(ki.down) {
-				y -= 1;
-			}
-			if(ki.right) {
-				x += 1;
-			}
-			if(ki.left) {
-				x -= 1;
-			}
+			y+=(f32)keyboardInput.up;
+			y-=(f32)keyboardInput.down;
+			x+=(f32)keyboardInput.right;
+			x-=(f32)keyboardInput.left;
 
 			v2 input = noz(v2(x, y));
 
@@ -518,30 +530,6 @@ main(i32 argc, char **argv) {
 		glUseProgram(programID);
 		glBindVertexArray(vertexArray);
 		glDrawArrays(GL_TRIANGLES, 0, arrayCount(vertexBufferCube));
-
-		// glEnableVertexAttribArray(0);
-		// glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-		// glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-		// glDrawArrays(GL_TRIANGLES, 0, arrayCount(vertexBufferCube));
-		// glDisableVertexAttribArray(0);
-
-		// glEnableVertexAttribArray(1);
-		// glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
-		// glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
-		// glDisableVertexAttribArray(1);
-		// glBufferData(GL_ARRAY_BUFFER, sizeof(colorBufferCube), colorBufferCube, GL_STATIC_DRAW);
-
-		#if 0
-		printf("deltatime: %f\n", deltaTime);
-		for (i32 v = 0; v < 12*3; v++) {
-			colorBufferCube[3*v+0] = fmod(colorBufferCube[3*v+0] + deltaTime, 1.f);
-			colorBufferCube[3*v+1] = fmod(colorBufferCube[3*v+1] + deltaTime, 1.f);
-			colorBufferCube[3*v+2] = fmod(colorBufferCube[3*v+2] + deltaTime, 1.f);
-		}
-		#endif
-
-		// glBufferData(GL_ARRAY_BUFFER, sizeof(colorBufferCube), colorBufferCube, GL_STATIC_DRAW);
-		// glDisableVertexAttribArray(1);
 
 		SDL_GL_SwapWindow(window);
 	}
