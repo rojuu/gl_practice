@@ -69,7 +69,10 @@
                     "C:/Program Files (x86)/Windows Kits/8.1/Include/um",
                     "C:/Program Files (x86)/Windows Kits/8.1/Include/shared",
                     "C:/Program Files (x86)/Windows Kits/8.1/Include/winrt",
-                    "${workspaceRoot}"
+                    "${workspaceRoot}",
+                    "${workspaceRoot}/libs/glew-2.0.0/include",
+                    "${workspaceRoot}/libs/glm-0.9.8.4/glm",
+                    "${workspaceRoot}/libs/SDL2-2.0.5/include"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
