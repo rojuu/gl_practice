@@ -1,7 +1,6 @@
 #version 330 core
 out vec3 color;
-in vec3 fragmentColor;
 
 void main() {
-    color = fragmentColor;
+    color = vec3(1.0f, 1.0f, 0.0f);
 }

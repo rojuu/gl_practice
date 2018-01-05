@@ -157,6 +157,12 @@ struct KeyboardInput {
 struct Mesh {
 	u32 vao;
 	u32 count;
+	u32 shaderProgram;
+};
+
+struct Rotation {
+	v3 axis;
+	f32 angle;
 };
 
 internal inline f32
@@ -247,8 +253,12 @@ main(i32 argc, char **argv) {
 	glewInit();
 #endif
 
-	u32 shaderProgram = loadShaders("shaders/basic.v", "shaders/basic.f");
-	if(shaderProgram == 0){
+	u32 basicShader = loadShaders("shaders/basic.v", "shaders/basic.f");
+	u32 yellowShader = loadShaders("shaders/basic.v", "shaders/yellow.f");
+	if(
+		basicShader == 0 ||
+		yellowShader == 0
+	) {
 		printf("Error loading shaders.\n");
 		return -1;
 	}
@@ -266,11 +276,26 @@ main(i32 argc, char **argv) {
 	};
 
 	// TODO: Update the object count when you add more objects to draw
-	const i32 objectCount = 1;
+	const i32 objectCount = 3;
 	Mesh meshArray[objectCount];
+	v3 positions[] {
+		v3(1,0,0),
+		v3(0,1,0),
+		v3(0,0,0),
+	};
+	Rotation rotations[] {
+		{v3(0,0,1), 0 },
+		{v3(0,0,1), 30},
+		{v3(0,0,1), 60},
+	};
+	v3 scales[] {
+		v3(0.1f, 0.1f, 1.0f),
+		v3(0.5f, 0.5f, 1.0f),
+		v3(2.5f, 0.4f, 1.0f),
+	};
 
 	// Init triangle
-	{
+	for(i32 i = 0; i < objectCount; i++) {
 		u32 vertexArray;
 		glGenVertexArrays(1, &vertexArray);
 
@@ -290,9 +315,11 @@ main(i32 argc, char **argv) {
 		glBufferData(GL_ARRAY_BUFFER, sizeof(triangleColorBuffer), triangleColorBuffer, GL_STATIC_DRAW);
 		glEnableVertexAttribArray(1);
 
-		meshArray[0].vao = vertexArray;
-		meshArray[0].count = arrayCount(triangleVertexBuffer) / 3;
+		meshArray[i].vao = vertexArray;
+		meshArray[i].count = arrayCount(triangleVertexBuffer) / 3;
+		meshArray[i].shaderProgram = basicShader;
 	}	
+	meshArray[1].shaderProgram = yellowShader;
 
 	v3 cameraPos = v3(0,0,0);
 
@@ -460,15 +487,19 @@ main(i32 argc, char **argv) {
 			v3(0,1,0)
 		);
 
-		m4 model = glm::translate(m4(1.0f), v3(0,0,0));
-		m4 mvp = projection * view * model;
-
-		u32 mvpHandle = glGetUniformLocation(shaderProgram, "MVP");
-		glUniformMatrix4fv(mvpHandle, 1, GL_FALSE, glm::value_ptr(mvp));
-
 		// Draw stuff
 		for(i32 i = 0; i < objectCount; i++) {
-			glUseProgram(shaderProgram);
+			m4 m = m4(1.0f);
+			m4 translate = glm::translate(m, positions[i]);
+			m4 rotate	 = glm::rotate(m, rotations[i].angle, rotations[i].axis);
+			m4 scale	 = glm::scale(m, scales[i]);
+			m4 model 	 = scale * translate * rotate;
+			m4 mvp 		 = projection * view * model;
+
+			u32 mvpHandle = glGetUniformLocation(meshArray[i].shaderProgram, "MVP");
+			glUniformMatrix4fv(mvpHandle, 1, GL_FALSE, glm::value_ptr(mvp));
+
+			glUseProgram(meshArray[i].shaderProgram);
 			glBindVertexArray(meshArray[i].vao);
 			glDrawArrays(GL_TRIANGLES, 0, meshArray[i].count);
 		}
