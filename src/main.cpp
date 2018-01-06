@@ -15,45 +15,34 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-typedef int8_t  i8;
-typedef int16_t i16;
-typedef int32_t i32;
-typedef int64_t i64;
-
-typedef uint8_t  u8;
-typedef uint16_t u16;
-typedef uint32_t u32;
-typedef uint64_t u64;
-
-typedef float  f32;
-typedef double f64;
-
-typedef i8  b8;
-typedef i16 b16;
-typedef i32 b32;
-typedef i64 b64;
-
-typedef glm::vec2 v2;
-typedef glm::vec3 v3;
-typedef glm::vec4 v4;
-
-typedef glm::mat2 m2;
-typedef glm::mat3 m3;
-typedef glm::mat4 m4;
+// TODO: Should we actually use windows.h rather than SDL?
+// If we'd do that, we could use some useful windows API calls.
+// Maybe still use SDL, but only use those calls for useful stuff?
+// How would I go about portability in a situation like that?
 
 #define internal static
 
 //#define arrayCount(arr) (sizeof(arr)/sizeof(*arr))
 #define arrayCount(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
 
+#include "types.cpp"
+#include "math.cpp"
+
 internal const f32 PI = glm::pi<f32>();
+
+#define SCREEN_WIDTH 1024
+#define SCREEN_HEIGHT 768
 
 internal u32
 loadShaders(const char * vertexFilePath, const char * fragmentFilePath) {
-
 	// Create the shaders
 	u32 vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
 	u32 fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
+
+	// TODO: is CRT better for file loading than C++ std library?
+	// Should we do file loading in a completely different way?
+
+	// TODO: Is std::string slow for this? Wouldn't it cause a lot of allocations?
 
 	// Read the Vertex Shader code from the file
 	std::string vertexShaderCode;
@@ -83,7 +72,7 @@ loadShaders(const char * vertexFilePath, const char * fragmentFilePath) {
 		return 0;
 	}
 
-	GLint result = GL_FALSE;
+	i32 result = 0;
 	i32 infoLogLength;
 
 	// Compile Vertex Shader
@@ -139,81 +128,6 @@ loadShaders(const char * vertexFilePath, const char * fragmentFilePath) {
 	glDeleteShader(fragmentShaderID);
 
 	return programID;
-}
-
-#define SCREEN_WIDTH 1024
-#define SCREEN_HEIGHT 768
-
-struct FPCamera {
-	v3 position;
-	v3 direction;
-	f32 yaw, pitch;
-	f32 speed;
-	f32 eyeHeight;
-};
-
-struct KeyboardInput {
-	b32 left, right, up, down;
-};
-
-struct Mesh {
-	u32 vao;
-	u32 count;
-	u32 shaderProgram;
-};
-
-struct Rotation {
-	v3 axis;
-	f32 angle;
-};
-
-internal inline f32
-clamp(f32 value, f32 min, f32 max) {
-	if(value < min) value = min;
-	if(value > max) value = max;
-	return value;
-}
-
-// Normalize or zero
-internal inline v3
-noz(v3 input) {
-	v3 result = input.x||input.y||input.z ? glm::normalize(input) : v3(0,0,0);
-	return result;
-}
-
-internal inline v2
-noz(v2 input) {
-	v2 result = input.x||input.y ? glm::normalize(input) : v2(0,0);
-	return result;
-}
-
-internal v3
-rotate(v3 in, v3 axis, f32 theta) {
-	f32 cosTheta = glm::cos(theta);
-	f32 sinTheta = glm::sin(theta);
-	return (in * cosTheta) + (glm::cross(axis, in) * sinTheta) + (axis * glm::dot(axis, in)) * (1 - cosTheta);
-}
-
-inline f32
-angleBetween(v3 a, v3 b) {
-	v3 da=noz(a);
-	v3 db=noz(b);
-	return glm::acos(glm::dot(da, db));
-}
-
-inline f32
-angleBetween(v3 a, v3 b, v3 origin) {
-	v3 da=noz(a-origin);
-	v3 db=noz(b-origin);
-	return glm::acos(glm::dot(da, db));
-}
-
-internal inline v3
-sphericalToCartesian(f32 radius, f32 longtitude, f32 latitude) {
-	f32 x = radius * glm::cos(latitude) * glm::sin(longtitude);
-	f32 y = radius * glm::sin(latitude);
-	f32 z = radius * glm::cos(latitude) * glm::cos(longtitude);
-	return v3(x,y,z);
 }
 
 internal u32
