@@ -12,6 +12,8 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include <cstdint>
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 typedef int8_t  i8;
 typedef int16_t i16;
@@ -214,8 +216,61 @@ sphericalToCartesian(f32 radius, f32 longtitude, f32 latitude) {
 	return v3(x,y,z);
 }
 
+internal u32
+loadTextureJPG(const char *fileName, bool flipVerticallyOnLoad) {
+	u32 texture;
+	glGenTextures(1, &texture);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	i32 width, height, nrChannels;
+	stbi_set_flip_vertically_on_load(flipVerticallyOnLoad);
+	u8 *data = stbi_load(fileName, &width, &height, &nrChannels, 0);
+	if (data)
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+	{
+		printf("Failed to load texture\n");
+		return 0;
+	}
+	stbi_image_free(data);
+	return texture;
+}
+
+internal u32
+loadTexturePNG(const char *fileName, bool flipVerticallyOnLoad) {
+	u32 texture;
+	glGenTextures(1, &texture);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	i32 width, height, nrChannels;
+	stbi_set_flip_vertically_on_load(flipVerticallyOnLoad);
+	u8 *data = stbi_load(fileName, &width, &height, &nrChannels, 0);
+	if (data)
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+	{
+		printf("Failed to load texture\n");
+		return 0;
+	}
+	stbi_image_free(data);
+	return texture;
+}
+
 i32
 main(i32 argc, char **argv) {
+	// Init SDL stuff
 	if(SDL_Init(SDL_INIT_VIDEO) < 0) {
 		printf("SDL_Error: %s\n", SDL_GetError());
 		return -1;
@@ -237,6 +292,7 @@ main(i32 argc, char **argv) {
 
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 
+	// Init OpenGL
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -253,81 +309,126 @@ main(i32 argc, char **argv) {
 	glewInit();
 #endif
 
-	u32 basicShader = loadShaders("shaders/basic.v", "shaders/basic.f");
-	u32 yellowShader = loadShaders("shaders/basic.v", "shaders/yellow.f");
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
+
+	// Load shaders
+	u32 basicShader = loadShaders("data/shaders/basic.v", "data/shaders/basic.f");
 	if(
-		basicShader == 0 ||
-		yellowShader == 0
+		!basicShader
 	) {
 		printf("Error loading shaders.\n");
 		return -1;
 	}
 
-	const f32 triangleVertexBuffer[] = {
-		 -0.5f, -0.5f,  0.0f,
+	//Load textures
+	u32 texture0 = loadTextureJPG("data/textures/container.jpg", true);
+	u32 texture1 = loadTexturePNG("data/textures/awesomeface.png", true);
+	if(
+		!texture0 ||
+		!texture1
+	) {
+		printf("Error loading textures.\n");
+		return -1;
+	}
+
+	// Object definitions
+	const f32 vertexPositions[] = {
+		  0.5f,  0.5f,  0.0f,
 		  0.5f, -0.5f,  0.0f,
-		  0.0f,  0.5f,  0.0f,
+		 -0.5f, -0.5f,  0.0f,
+		 -0.5f,  0.5f,  0.0f,
 	};
 
-	const f32 triangleColorBuffer[] = {
-		 0.0f, 0.0f, 1.0f,
-		 0.0f, 1.0f, 0.0f,
+	const u32 indices[] = {
+		0, 1, 3,
+		1, 2, 3,
+	};
+
+	const f32 vertexColors[] = {
 		 1.0f, 0.0f, 0.0f,
+		 0.0f, 1.0f, 0.0f,
+		 0.0f, 0.0f, 1.0f,
+		 1.0f, 1.0f, 0.0f,
+	};
+
+	const f32 texCoords[] = {
+		1.0f, 1.0f,
+		1.0f, 0.0f,
+		0.0f, 0.0f,
+		0.0f, 1.0f,
 	};
 
 	// TODO: Update the object count when you add more objects to draw
-	const i32 objectCount = 3;
+	const i32 objectCount = 1;
 	Mesh meshArray[objectCount];
 	v3 positions[] {
+		v3(0,0,0),
 		v3(1,0,0),
 		v3(0,1,0),
 		v3(0,0,0),
 	};
 	Rotation rotations[] {
 		{v3(0,0,1), 0 },
+		{v3(0,0,1), 0 },
 		{v3(0,0,1), 30},
 		{v3(0,0,1), 60},
 	};
 	v3 scales[] {
+		v3(1.0f, 1.0f, 1.0f),
 		v3(0.1f, 0.1f, 1.0f),
 		v3(0.5f, 0.5f, 1.0f),
 		v3(2.5f, 0.4f, 1.0f),
 	};
 
-	// Init triangle
+	u32 vertexArray;
+	glGenVertexArrays(1, &vertexArray);
+
+	u32 elementBuffer;
+	glGenBuffers(1, &elementBuffer);
+
+	u32 vertexBuffer;
+	glGenBuffers(1, &vertexBuffer);
+	u32 colorBuffer;
+	glGenBuffers(1, &colorBuffer);
+	u32 texCoordBuffer;
+	glGenBuffers(1, &texCoordBuffer);
+
+	glBindVertexArray(vertexArray);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertexPositions), vertexPositions, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertexColors), vertexColors, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(1);
+
+	glBindBuffer(GL_ARRAY_BUFFER, texCoordBuffer);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(texCoords), texCoords, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(2);
+
+
 	for(i32 i = 0; i < objectCount; i++) {
-		u32 vertexArray;
-		glGenVertexArrays(1, &vertexArray);
-
-		u32 vertexBuffer;
-		glGenBuffers(1, &vertexBuffer);
-		u32 colorBuffer;
-		glGenBuffers(1, &colorBuffer);
-
-		glBindVertexArray(vertexArray);
-		glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(triangleVertexBuffer), triangleVertexBuffer, GL_STATIC_DRAW);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-		glEnableVertexAttribArray(0);
-
-		glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(triangleColorBuffer), triangleColorBuffer, GL_STATIC_DRAW);
-		glEnableVertexAttribArray(1);
-
 		meshArray[i].vao = vertexArray;
-		meshArray[i].count = arrayCount(triangleVertexBuffer) / 3;
+		meshArray[i].count = arrayCount(indices);
 		meshArray[i].shaderProgram = basicShader;
 	}	
-	meshArray[1].shaderProgram = yellowShader;
+
+	glUseProgram(basicShader);
+	glUniform1i(glGetUniformLocation(basicShader, "inTexture0"), 0);
+	glUniform1i(glGetUniformLocation(basicShader, "inTexture1"), 1);
 
 	v3 cameraPos = v3(0,0,0);
 
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LESS);
-
 	glClearColor(0.0, 0.0, 0.0, 1.0);
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	SDL_GL_SwapWindow(window);
 
 	FPCamera fp;
@@ -489,20 +590,31 @@ main(i32 argc, char **argv) {
 
 		// Draw stuff
 		for(i32 i = 0; i < objectCount; i++) {
-			m4 m = m4(1.0f);
-			m4 translate = glm::translate(m, positions[i]);
-			m4 rotate	 = glm::rotate(m, rotations[i].angle, rotations[i].axis);
-			m4 scale	 = glm::scale(m, scales[i]);
-			m4 model 	 = scale * translate * rotate;
-			m4 mvp 		 = projection * view * model;
+			v3 scale = scales[i];
+			v3 position = positions[i];
+			Mesh mesh = meshArray[i];
+			Rotation rotation = rotations[i];
 
-			u32 mvpHandle = glGetUniformLocation(meshArray[i].shaderProgram, "MVP");
+			m4 m = m4(1.0f);
+			m4 translate = glm::translate(m, position);
+			m4 rotate    = glm::rotate(m, rotation.angle, rotation.axis);
+			m4 scaleM    = glm::scale(m, scale);
+			m4 model     = scaleM * translate * rotate;
+			m4 mvp       = projection * view * model;
+
+			u32 mvpHandle = glGetUniformLocation(mesh.shaderProgram, "MVP");
 			glUniformMatrix4fv(mvpHandle, 1, GL_FALSE, glm::value_ptr(mvp));
 
-			glUseProgram(meshArray[i].shaderProgram);
-			glBindVertexArray(meshArray[i].vao);
-			glDrawArrays(GL_TRIANGLES, 0, meshArray[i].count);
+			glUseProgram(mesh.shaderProgram);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, texture0);
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, texture1);
+			glBindVertexArray(mesh.vao);
+			glDrawElements(GL_TRIANGLES, mesh.count, GL_UNSIGNED_INT, 0);
 		}
+
+		glBindVertexArray(0);
 
 		SDL_GL_SwapWindow(window);
 	}
