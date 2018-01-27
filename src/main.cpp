@@ -15,10 +15,14 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-// TODO: Should we actually use windows.h rather than SDL?
-// If we'd do that, we could use some useful windows API calls.
-// Maybe still use SDL, but only use those calls for useful stuff?
-// How would I go about portability in a situation like that?
+/** TODO: 
+ * 
+ * Should we actually use windows.h rather than SDL?
+ * If we'd do that, we could use some useful windows API calls.
+ * Maybe still use SDL, but only use those calls for useful stuff?
+ * How would I go about portability in a situation like that?
+ * 
+ **/
 
 #define internal static
 
@@ -143,7 +147,7 @@ loadShaders(const char *vertexFilePath, const char *fragmentFilePath)
 }
 
 internal u32
-loadTextureJPG(const char *fileName, bool flipVerticallyOnLoad)
+loadTexture(const char *filename, bool flipVerticallyOnLoad, GLint internalFormat, GLenum format)
 {
     u32 texture;
     glGenTextures(1, &texture);
@@ -154,10 +158,10 @@ loadTextureJPG(const char *fileName, bool flipVerticallyOnLoad)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     i32 width, height, nrChannels;
     stbi_set_flip_vertically_on_load(flipVerticallyOnLoad);
-    u8 *data = stbi_load(fileName, &width, &height, &nrChannels, 0);
+    u8 *data = stbi_load(filename, &width, &height, &nrChannels, 0);
     if (data)
     {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
     }
     else
@@ -169,30 +173,17 @@ loadTextureJPG(const char *fileName, bool flipVerticallyOnLoad)
     return texture;
 }
 
-internal u32
-loadTexturePNG(const char *fileName, bool flipVerticallyOnLoad)
+internal inline u32
+loadTextureJPG(const char *filename, bool flipVerticallyOnLoad)
 {
-    u32 texture;
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    i32 width, height, nrChannels;
-    stbi_set_flip_vertically_on_load(flipVerticallyOnLoad);
-    u8 *data = stbi_load(fileName, &width, &height, &nrChannels, 0);
-    if (data)
-    {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    }
-    else
-    {
-        printf("Failed to load texture\n");
-        return 0;
-    }
-    stbi_image_free(data);
+    u32 texture = loadTexture(filename, flipVerticallyOnLoad, GL_RGB, GL_RGB);
+    return texture;
+}
+
+internal inline u32
+loadTexturePNG(const char *filename, bool flipVerticallyOnLoad)
+{
+    u32 texture = loadTexture(filename, flipVerticallyOnLoad, GL_RGBA, GL_RGBA);
     return texture;
 }
 
@@ -262,127 +253,274 @@ i32 main(i32 argc, char **argv)
     }
 
     // Object definitions
-    const f32 vertexPositions[] = {
-        0.5f,
-        0.5f,
-        0.0f,
-        0.5f,
-        -0.5f,
-        0.0f,
-        -0.5f,
-        -0.5f,
-        0.0f,
-        -0.5f,
-        0.5f,
-        0.0f,
-    };
 
-    const u32 indices[] = {
-        0,
-        1,
-        3,
-        1,
-        2,
-        3,
-    };
+    // Quad
+    const f32 quadVertexPositions[] = {
+        0.5f, 0.5f, 0.0f,
+        0.5f, -0.5f, 0.0f,
+        -0.5f, -0.5f, 0.0f,
+        -0.5f, 0.5f, 0.0f};
 
-    const f32 vertexColors[] = {
-        1.0f,
-        0.0f,
-        0.0f,
-        0.0f,
-        1.0f,
-        0.0f,
-        0.0f,
-        0.0f,
-        1.0f,
-        1.0f,
-        1.0f,
-        0.0f,
-    };
+    const u32 quadIndices[] = {
+        0, 1, 3,
+        1, 2, 3};
 
-    const f32 texCoords[] = {
-        1.0f,
-        1.0f,
-        1.0f,
-        0.0f,
-        0.0f,
-        0.0f,
-        0.0f,
-        1.0f,
-    };
+    const f32 quadVertexColors[] = {
+        1.0f, 0.0f, 0.0f,
+        0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 1.0f,
+        1.0f, 1.0f, 0.0f};
 
-    // TODO: Update the object count when you add more objects to draw
-    const i32 objectCount = 1;
-    Mesh meshArray[objectCount];
-    v3 positions[]{
+    const f32 quadTexCoords[] = {
+        1.0f, 1.0f,
+        1.0f, 0.0f,
+        0.0f, 0.0f,
+        0.0f, 1.0f};
+
+    //Cube
+    //TODO: Indices
+    const f32 cubeVertexPositions[] = {
+        -0.5f, -0.5f, -0.5f,
+        0.5f, -0.5f, -0.5f,
+        0.5f, 0.5f, -0.5f,
+        0.5f, 0.5f, -0.5f,
+        -0.5f, 0.5f, -0.5f,
+        -0.5f, -0.5f, -0.5f,
+
+        -0.5f, -0.5f, 0.5f,
+        0.5f, -0.5f, 0.5f,
+        0.5f, 0.5f, 0.5f,
+        0.5f, 0.5f, 0.5f,
+        -0.5f, 0.5f, 0.5f,
+        -0.5f, -0.5f, 0.5f,
+
+        -0.5f, 0.5f, 0.5f,
+        -0.5f, 0.5f, -0.5f,
+        -0.5f, -0.5f, -0.5f,
+        -0.5f, -0.5f, -0.5f,
+        -0.5f, -0.5f, 0.5f,
+        -0.5f, 0.5f, 0.5f,
+
+        0.5f, 0.5f, 0.5f,
+        0.5f, 0.5f, -0.5f,
+        0.5f, -0.5f, -0.5f,
+        0.5f, -0.5f, -0.5f,
+        0.5f, -0.5f, 0.5f,
+        0.5f, 0.5f, 0.5f,
+
+        -0.5f, -0.5f, -0.5f,
+        0.5f, -0.5f, -0.5f,
+        0.5f, -0.5f, 0.5f,
+        0.5f, -0.5f, 0.5f,
+        -0.5f, -0.5f, 0.5f,
+        -0.5f, -0.5f, -0.5f,
+
+        -0.5f, 0.5f, -0.5f,
+        0.5f, 0.5f, -0.5f,
+        0.5f, 0.5f, 0.5f,
+        0.5f, 0.5f, 0.5f,
+        -0.5f, 0.5f, 0.5f,
+        -0.5f, 0.5f, -0.5f};
+
+    const f32 cubeVertexColors[] = {
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f};
+
+    const f32 cubeTexCoords[] = {
+        0.0f, 0.0f,
+        1.0f, 0.0f,
+        1.0f, 1.0f,
+        1.0f, 1.0f,
+        0.0f, 1.0f,
+        0.0f, 0.0f,
+
+        0.0f, 0.0f,
+        1.0f, 0.0f,
+        1.0f, 1.0f,
+        1.0f, 1.0f,
+        0.0f, 1.0f,
+        0.0f, 0.0f,
+
+        1.0f, 0.0f,
+        1.0f, 1.0f,
+        0.0f, 1.0f,
+        0.0f, 1.0f,
+        0.0f, 0.0f,
+        1.0f, 0.0f,
+
+        1.0f, 0.0f,
+        1.0f, 1.0f,
+        0.0f, 1.0f,
+        0.0f, 1.0f,
+        0.0f, 0.0f,
+        1.0f, 0.0f,
+
+        0.0f, 1.0f,
+        1.0f, 1.0f,
+        1.0f, 0.0f,
+        1.0f, 0.0f,
+        0.0f, 0.0f,
+        0.0f, 1.0f,
+
+        0.0f, 1.0f,
+        1.0f, 1.0f,
+        1.0f, 0.0f,
+        1.0f, 0.0f,
+        0.0f, 0.0f,
+        0.0f, 1.0f};
+
+    //Quads
+    v3 quadPositions[]{
         v3(0, 0, 0),
         v3(1, 0, 0),
         v3(0, 1, 0),
         v3(0, 0, 0),
     };
-    Rotation rotations[]{
-        {v3(0, 0, 1), 0},
-        {v3(0, 0, 1), 0},
-        {v3(0, 0, 1), 30},
-        {v3(0, 0, 1), 60},
+    Rotation quadRotations[]{
+        {v3(0, 0, 1), glm::radians((float)0)},
+        {v3(0, 0, 1), glm::radians((float)0)},
+        {v3(0, 0, 1), glm::radians((float)30)},
+        {v3(0, 0, 1), glm::radians((float)60)},
     };
-    v3 scales[]{
+    v3 quadScales[]{
         v3(1.0f, 1.0f, 1.0f),
         v3(0.1f, 0.1f, 1.0f),
         v3(0.5f, 0.5f, 1.0f),
         v3(2.5f, 0.4f, 1.0f),
     };
 
-    u32 vertexArray;
-    glGenVertexArrays(1, &vertexArray);
+    const i32 quadCount = 1;
+    // const i32 quadCount = arrayCount(quadPositions);
+    Mesh quadMeshArray[quadCount];
 
-    u32 elementBuffer;
-    glGenBuffers(1, &elementBuffer);
+    u32 quadVertexArray;
+    glGenVertexArrays(1, &quadVertexArray);
 
-    u32 vertexBuffer;
-    glGenBuffers(1, &vertexBuffer);
-    u32 colorBuffer;
-    glGenBuffers(1, &colorBuffer);
-    u32 texCoordBuffer;
-    glGenBuffers(1, &texCoordBuffer);
+    u32 quadElementBuffer;
+    glGenBuffers(1, &quadElementBuffer);
 
-    glBindVertexArray(vertexArray);
+    u32 quadVertexBuffer;
+    glGenBuffers(1, &quadVertexBuffer);
+    u32 quadColorBuffer;
+    glGenBuffers(1, &quadColorBuffer);
+    u32 quadTexCoordBuffer;
+    glGenBuffers(1, &quadTexCoordBuffer);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    glBindVertexArray(quadVertexArray);
 
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertexPositions), vertexPositions, GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, quadElementBuffer);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(quadIndices), quadIndices, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ARRAY_BUFFER, quadVertexBuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertexPositions), quadVertexPositions, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(0);
 
-    glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, quadColorBuffer);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertexColors), vertexColors, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertexColors), quadVertexColors, GL_STATIC_DRAW);
     glEnableVertexAttribArray(1);
 
-    glBindBuffer(GL_ARRAY_BUFFER, texCoordBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, quadTexCoordBuffer);
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, 0);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(texCoords), texCoords, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadTexCoords), quadTexCoords, GL_STATIC_DRAW);
     glEnableVertexAttribArray(2);
 
-    for (i32 i = 0; i < objectCount; i++)
+    for (i32 i = 0; i < quadCount; i++)
     {
-        meshArray[i].vao = vertexArray;
-        meshArray[i].count = arrayCount(indices);
-        meshArray[i].shaderProgram = basicShader;
+        quadMeshArray[i].vao = quadVertexArray;
+        quadMeshArray[i].count = arrayCount(quadIndices);
+        quadMeshArray[i].shaderProgram = basicShader;
     }
+    //END Quads
+
+    //Cubes
+    v3 cubePositions[]{
+        v3(0, 0, 0),
+    };
+
+    const i32 cubeCount = arrayCount(cubePositions);
+    Mesh cubeMeshArray[cubeCount];
+
+    u32 cubeVertexArray;
+    glGenVertexArrays(1, &cubeVertexArray);
+
+    u32 cubeVertexBuffer;
+    glGenBuffers(1, &cubeVertexBuffer);
+    u32 cubeColorBuffer;
+    glGenBuffers(1, &cubeColorBuffer);
+    u32 cubeTexCoordBuffer;
+    glGenBuffers(1, &cubeTexCoordBuffer);
+
+    glBindVertexArray(cubeVertexArray);
+
+    glBindBuffer(GL_ARRAY_BUFFER, cubeVertexBuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertexPositions), cubeVertexPositions, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, cubeColorBuffer);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertexColors), cubeVertexColors, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(1);
+
+    glBindBuffer(GL_ARRAY_BUFFER, cubeTexCoordBuffer);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, 0);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeTexCoords), cubeTexCoords, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(2);
 
     glUseProgram(basicShader);
     glUniform1i(glGetUniformLocation(basicShader, "inTexture0"), 0);
     glUniform1i(glGetUniformLocation(basicShader, "inTexture1"), 1);
 
-    v3 cameraPos = v3(0, 0, 0);
+    for (i32 i = 0; i < cubeCount; ++i)
+    {
+        cubeMeshArray[i].vao = cubeVertexArray;
+        cubeMeshArray[i].count = arrayCount(cubeVertexPositions) / 3;
+        cubeMeshArray[i].shaderProgram = basicShader;
+    }
+    //END cubes
 
-    glClearColor(0.0, 0.0, 0.0, 1.0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    SDL_GL_SwapWindow(window);
+    v3 cameraPos = v3(0, 0, 0);
 
     FPCamera fp;
     fp.position = v3(0, 0, -3);
@@ -577,17 +715,19 @@ i32 main(i32 argc, char **argv)
             v3(0, 0, 0),
             v3(0, 1, 0));
 
-        // Draw stuff
-        for (i32 i = 0; i < objectCount; i++)
+// Draw quads
+#if 0
+        for (i32 i = 0; i < quadCount; i++)
         {
-            v3 scale = scales[i];
-            v3 position = positions[i];
-            Mesh mesh = meshArray[i];
-            Rotation rotation = rotations[i];
+            v3 scale = quadScales[i];
+            v3 position = quadPositions[i];
+            Mesh mesh = quadMeshArray[i];
+            Rotation rotation = quadRotations[i];
 
             m4 m = m4(1.0f);
             m4 translate = glm::translate(m, position);
             m4 rotate = glm::rotate(m, rotation.angle, rotation.axis);
+            rotate = glm::rotate(rotate, glm::radians(10.f), v3(1, 0, 0));
             m4 scaleM = glm::scale(m, scale);
             m4 model = scaleM * translate * rotate;
             m4 mvp = projection * view * model;
@@ -603,6 +743,37 @@ i32 main(i32 argc, char **argv)
             glBindVertexArray(mesh.vao);
             glDrawElements(GL_TRIANGLES, mesh.count, GL_UNSIGNED_INT, 0);
         }
+#endif
+
+// Draw cubes
+#if 1
+        for (i32 i = 0; i < cubeCount; i++)
+        {
+            const f32 scalef = 0.5f;
+            v3 scale = v3(scalef, scalef, scalef);
+            v3 position = cubePositions[i];
+            Mesh mesh = cubeMeshArray[i];
+            Rotation rotation = {v3(1, 1, 0), glm::sin((f32)currentTime)};
+
+            m4 m = m4(1.0f);
+            m4 translate = glm::translate(m, position);
+            m4 scaleM = glm::scale(m, scale);
+            m4 rotate = glm::rotate(m, rotation.angle, rotation.axis);
+            m4 model = scaleM * translate * rotate;
+            m4 mvp = projection * view * model;
+
+            u32 mvpHandle = glGetUniformLocation(mesh.shaderProgram, "MVP");
+            glUniformMatrix4fv(mvpHandle, 1, GL_FALSE, glm::value_ptr(mvp));
+
+            glUseProgram(mesh.shaderProgram);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, texture0);
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, texture1);
+            glBindVertexArray(mesh.vao);
+            glDrawArrays(GL_TRIANGLES, 0, mesh.count);
+        }
+#endif
 
         glBindVertexArray(0);
 
