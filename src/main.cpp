@@ -475,9 +475,29 @@ i32 main(i32 argc, char **argv)
 
     //Cubes
     v3 cubePositions[]{
-        v3(0, 0, 0),
+        v3(0.0f, 0.0f, 0.0f),
+        v3(2.0f, 5.0f, -15.0f),
+        v3(-1.5f, -2.2f, -2.5f),
+        v3(-3.8f, -2.0f, -12.3f),
+        v3(2.4f, -0.4f, -3.5f),
+        v3(-1.7f, 3.0f, -7.5f),
+        v3(1.3f, -2.0f, -2.5f),
+        v3(1.5f, 2.0f, -2.5f),
+        v3(1.5f, 0.2f, -1.5f),
+        v3(-1.3f, 1.0f, -1.5f),
     };
-
+    Rotation cubeRotations[]{
+        {v3(1, 0, 1), glm::radians((float)10)},
+        {v3(1, 1, 1), glm::radians((float)24)},
+        {v3(0, 1, 1), glm::radians((float)30)},
+        {v3(1, 1, 0), glm::radians((float)60)},
+        {v3(1, 1, 0), glm::radians((float)60)},
+        {v3(0, 1, 1), glm::radians((float)30)},
+        {v3(1, 1, 1), glm::radians((float)24)},
+        {v3(0, 1, 1), glm::radians((float)30)},
+        {v3(0, 1, 1), glm::radians((float)30)},
+        {v3(1, 0, 1), glm::radians((float)10)},
+    };
     const i32 cubeCount = arrayCount(cubePositions);
     Mesh cubeMeshArray[cubeCount];
 
@@ -701,7 +721,7 @@ i32 main(i32 argc, char **argv)
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        m4 projection = glm::perspective(glm::radians(90.0f),
+        m4 projection = glm::perspective(glm::radians(45.0f),
                                          (f32)SCREEN_WIDTH / (f32)SCREEN_HEIGHT, 0.1f, 100.0f);
 
         // m4 view = glm::lookAt(
@@ -711,7 +731,7 @@ i32 main(i32 argc, char **argv)
         // );
 
         m4 view = glm::lookAt(
-            v3(0, 0, 1),
+            v3(0, 0, 3),
             v3(0, 0, 0),
             v3(0, 1, 0));
 
@@ -749,11 +769,12 @@ i32 main(i32 argc, char **argv)
 #if 1
         for (i32 i = 0; i < cubeCount; i++)
         {
-            const f32 scalef = 0.5f;
-            v3 scale = v3(scalef, scalef, scalef);
+            // v3 scale = cubeScales[i];
+            const f32 s = 1.0f;
+            v3 scale = v3(s, s, s);
             v3 position = cubePositions[i];
             Mesh mesh = cubeMeshArray[i];
-            Rotation rotation = {v3(1, 1, 0), glm::sin((f32)currentTime)};
+            Rotation rotation = cubeRotations[i];
 
             m4 m = m4(1.0f);
             m4 translate = glm::translate(m, position);
