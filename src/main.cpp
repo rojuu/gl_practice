@@ -765,6 +765,24 @@ i32 main(i32 argc, char **argv)
         }
 #endif
 
+        for (i32 i = 0; i < cubeCount; i += 3)
+        {
+            cubeRotations[i].angle += deltaTime;
+            cubeRotations[i].angle = fmod(cubeRotations[i].angle, (PI * 2));
+        }
+
+        for (i32 i = 1; i < cubeCount; i += 3)
+        {
+            cubeRotations[i].angle -= deltaTime;
+            cubeRotations[i].angle = fmod(cubeRotations[i].angle, (PI * 2));
+        }
+
+        for (i32 i = 2; i < cubeCount; i += 3)
+        {
+            cubeRotations[i].angle += 0.5f * deltaTime;
+            cubeRotations[i].angle = fmod(cubeRotations[i].angle, (PI * 2));
+        }
+
 // Draw cubes
 #if 1
         for (i32 i = 0; i < cubeCount; i++)
