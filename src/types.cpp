@@ -24,8 +24,7 @@ typedef glm::mat2 m2;
 typedef glm::mat3 m3;
 typedef glm::mat4 m4;
 
-struct FPCamera
-{
+struct FPCamera {
     v3 position;
     v3 direction;
     f32 yaw, pitch;
@@ -33,20 +32,17 @@ struct FPCamera
     f32 eyeHeight;
 };
 
-struct KeyboardInput
-{
+struct KeyboardInput {
     b32 left, right, up, down;
 };
 
-struct Mesh
-{
+struct Mesh {
     u32 vao;
     u32 count;
     u32 shaderProgram;
 };
 
-struct Rotation
-{
+struct Rotation {
     v3 axis;
     f32 angle;
 };

@@ -1,0 +1,10 @@
+ColumnLimit: 0
+AlignConsecutiveAssignments: true
+AlignTrailingComments: true
+AllowAllParametersOfDeclarationOnNextLine: true
+AlwaysBreakAfterReturnType: All
+BreakBeforeBraces: Attach
+IndentWidth: 4
+SortIncludes: false
+SpaceAfterCStyleCast: false
+SpaceBeforeParens: Never

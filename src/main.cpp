@@ -38,10 +38,9 @@ internal const f32 PI = glm::pi<f32>();
 #define SCREEN_HEIGHT 768
 
 internal u32
-loadShaders(const char *vertexFilePath, const char *fragmentFilePath)
-{
+loadShaders(const char *vertexFilePath, const char *fragmentFilePath) {
     // Create the shaders
-    u32 vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
+    u32 vertexShaderID   = glCreateShader(GL_VERTEX_SHADER);
     u32 fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
 
     // TODO: is CRT better for file loading than C++ std library?
@@ -52,17 +51,13 @@ loadShaders(const char *vertexFilePath, const char *fragmentFilePath)
     // Read the Vertex Shader code from the file
     std::string vertexShaderCode;
     std::ifstream vertexShaderStream(vertexFilePath, std::ios::in);
-    if (vertexShaderStream.is_open())
-    {
+    if(vertexShaderStream.is_open()) {
         std::string Line = "";
-        while (getline(vertexShaderStream, Line))
-        {
+        while(getline(vertexShaderStream, Line)) {
             vertexShaderCode += "\n" + Line;
         }
         vertexShaderStream.close();
-    }
-    else
-    {
+    } else {
         printf("Cannot open %s\n", vertexFilePath);
         return 0;
     }
@@ -70,17 +65,13 @@ loadShaders(const char *vertexFilePath, const char *fragmentFilePath)
     // Read the Fragment Shader code from the file
     std::string fragmentShaderCode;
     std::ifstream fragmentShaderStream(fragmentFilePath, std::ios::in);
-    if (fragmentShaderStream.is_open())
-    {
+    if(fragmentShaderStream.is_open()) {
         std::string Line = "";
-        while (getline(fragmentShaderStream, Line))
-        {
+        while(getline(fragmentShaderStream, Line)) {
             fragmentShaderCode += "\n" + Line;
         }
         fragmentShaderStream.close();
-    }
-    else
-    {
+    } else {
         printf("Cannot open %s\n", fragmentFilePath);
         return 0;
     }
@@ -97,8 +88,7 @@ loadShaders(const char *vertexFilePath, const char *fragmentFilePath)
     // Check Vertex Shader
     glGetShaderiv(vertexShaderID, GL_COMPILE_STATUS, &result);
     glGetShaderiv(vertexShaderID, GL_INFO_LOG_LENGTH, &infoLogLength);
-    if (infoLogLength > 0)
-    {
+    if(infoLogLength > 0) {
         std::vector<char> vertexShaderErrorMessage(infoLogLength + 1);
         glGetShaderInfoLog(vertexShaderID, infoLogLength, NULL, &vertexShaderErrorMessage[0]);
         printf("%s\n", &vertexShaderErrorMessage[0]);
@@ -113,8 +103,7 @@ loadShaders(const char *vertexFilePath, const char *fragmentFilePath)
     // Check Fragment Shader
     glGetShaderiv(fragmentShaderID, GL_COMPILE_STATUS, &result);
     glGetShaderiv(fragmentShaderID, GL_INFO_LOG_LENGTH, &infoLogLength);
-    if (infoLogLength > 0)
-    {
+    if(infoLogLength > 0) {
         std::vector<char> fragmentShaderErrorMessage(infoLogLength + 1);
         glGetShaderInfoLog(fragmentShaderID, infoLogLength, NULL, &fragmentShaderErrorMessage[0]);
         printf("%s\n", &fragmentShaderErrorMessage[0]);
@@ -130,8 +119,7 @@ loadShaders(const char *vertexFilePath, const char *fragmentFilePath)
     // Check the program
     glGetProgramiv(programID, GL_LINK_STATUS, &result);
     glGetProgramiv(programID, GL_INFO_LOG_LENGTH, &infoLogLength);
-    if (infoLogLength > 0)
-    {
+    if(infoLogLength > 0) {
         std::vector<char> programErrorMessage(infoLogLength + 1);
         glGetProgramInfoLog(programID, infoLogLength, NULL, &programErrorMessage[0]);
         printf("%s\n", &programErrorMessage[0]);
@@ -147,8 +135,7 @@ loadShaders(const char *vertexFilePath, const char *fragmentFilePath)
 }
 
 internal u32
-loadTexture(const char *filename, bool flipVerticallyOnLoad, GLint internalFormat, GLenum format)
-{
+loadTexture(const char *filename, bool flipVerticallyOnLoad, GLint internalFormat, GLenum format) {
     u32 texture;
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
@@ -159,13 +146,10 @@ loadTexture(const char *filename, bool flipVerticallyOnLoad, GLint internalForma
     i32 width, height, nrChannels;
     stbi_set_flip_vertically_on_load(flipVerticallyOnLoad);
     u8 *data = stbi_load(filename, &width, &height, &nrChannels, 0);
-    if (data)
-    {
+    if(data) {
         glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
-    }
-    else
-    {
+    } else {
         printf("Failed to load texture\n");
         return 0;
     }
@@ -174,24 +158,21 @@ loadTexture(const char *filename, bool flipVerticallyOnLoad, GLint internalForma
 }
 
 internal inline u32
-loadTextureJPG(const char *filename, bool flipVerticallyOnLoad)
-{
+loadTextureJPG(const char *filename, bool flipVerticallyOnLoad) {
     u32 texture = loadTexture(filename, flipVerticallyOnLoad, GL_RGB, GL_RGB);
     return texture;
 }
 
 internal inline u32
-loadTexturePNG(const char *filename, bool flipVerticallyOnLoad)
-{
+loadTexturePNG(const char *filename, bool flipVerticallyOnLoad) {
     u32 texture = loadTexture(filename, flipVerticallyOnLoad, GL_RGBA, GL_RGBA);
     return texture;
 }
 
-i32 main(i32 argc, char **argv)
-{
+i32
+main(i32 argc, char **argv) {
     // Init SDL stuff
-    if (SDL_Init(SDL_INIT_VIDEO) < 0)
-    {
+    if(SDL_Init(SDL_INIT_VIDEO) < 0) {
         printf("SDL_Error: %s\n", SDL_GetError());
         return -1;
     }
@@ -204,8 +185,7 @@ i32 main(i32 argc, char **argv)
         SCREEN_WIDTH, SCREEN_HEIGHT,
         SDL_WINDOW_OPENGL);
 
-    if (!window)
-    {
+    if(!window) {
         printf("SDL_Error: %s\n", SDL_GetError());
         return -1;
     }
@@ -234,9 +214,8 @@ i32 main(i32 argc, char **argv)
 
     // Load shaders
     u32 basicShader = loadShaders("data/shaders/basic.v", "data/shaders/basic.f");
-    if (
-        !basicShader)
-    {
+    if(
+        !basicShader) {
         printf("Error loading shaders.\n");
         return -1;
     }
@@ -244,10 +223,9 @@ i32 main(i32 argc, char **argv)
     //Load textures
     u32 texture0 = loadTextureJPG("data/textures/container.jpg", true);
     u32 texture1 = loadTexturePNG("data/textures/awesomeface.png", true);
-    if (
+    if(
         !texture0 ||
-        !texture1)
-    {
+        !texture1) {
         printf("Error loading textures.\n");
         return -1;
     }
@@ -465,10 +443,9 @@ i32 main(i32 argc, char **argv)
     glBufferData(GL_ARRAY_BUFFER, sizeof(quadTexCoords), quadTexCoords, GL_STATIC_DRAW);
     glEnableVertexAttribArray(2);
 
-    for (i32 i = 0; i < quadCount; i++)
-    {
-        quadMeshArray[i].vao = quadVertexArray;
-        quadMeshArray[i].count = arrayCount(quadIndices);
+    for(i32 i = 0; i < quadCount; i++) {
+        quadMeshArray[i].vao           = quadVertexArray;
+        quadMeshArray[i].count         = arrayCount(quadIndices);
         quadMeshArray[i].shaderProgram = basicShader;
     }
     //END Quads
@@ -532,10 +509,9 @@ i32 main(i32 argc, char **argv)
     glUniform1i(glGetUniformLocation(basicShader, "inTexture0"), 0);
     glUniform1i(glGetUniformLocation(basicShader, "inTexture1"), 1);
 
-    for (i32 i = 0; i < cubeCount; ++i)
-    {
-        cubeMeshArray[i].vao = cubeVertexArray;
-        cubeMeshArray[i].count = arrayCount(cubeVertexPositions) / 3;
+    for(i32 i = 0; i < cubeCount; ++i) {
+        cubeMeshArray[i].vao           = cubeVertexArray;
+        cubeMeshArray[i].count         = arrayCount(cubeVertexPositions) / 3;
         cubeMeshArray[i].shaderProgram = basicShader;
     }
     //END cubes
@@ -543,150 +519,113 @@ i32 main(i32 argc, char **argv)
     v3 cameraPos = v3(0, 0, 0);
 
     FPCamera fp;
-    fp.position = v3(0, 0, -3);
-    fp.pitch = 0.f;
-    fp.yaw = 90.f;
-    fp.speed = 10.f;
+    fp.position  = v3(0, 0, -3);
+    fp.pitch     = 0.f;
+    fp.yaw       = 90.f;
+    fp.speed     = 10.f;
     fp.eyeHeight = 1.8f;
 
     KeyboardInput keyboardInput = {};
 
     f64 currentTime = (f32)SDL_GetPerformanceCounter() /
                       (f32)SDL_GetPerformanceFrequency();
-    f64 lastTime = 0;
-    f64 deltaTime = 0;
-    i32 frameCounter = 0;
+    f64 lastTime       = 0;
+    f64 deltaTime      = 0;
+    i32 frameCounter   = 0;
     i32 lastFrameCount = 0;
-    b32 running = true;
-    f64 lastFpsTime = 0;
-    while (running)
-    {
-        lastTime = currentTime;
+    b32 running        = true;
+    f64 lastFpsTime    = 0;
+    while(running) {
+        lastTime    = currentTime;
         currentTime = (f64)SDL_GetPerformanceCounter() /
                       (f64)SDL_GetPerformanceFrequency();
         deltaTime = (f64)(currentTime - lastTime);
 
         // Count frames for every second and print it as the title of the window
         ++frameCounter;
-        if (currentTime >= (lastFpsTime + 1.f))
-        {
-            lastFpsTime = currentTime;
+        if(currentTime >= (lastFpsTime + 1.f)) {
+            lastFpsTime     = currentTime;
             i32 deltaFrames = frameCounter - lastFrameCount;
-            lastFrameCount = frameCounter;
+            lastFrameCount  = frameCounter;
             char title[64];
             sprintf(title, "FPS: %d", deltaFrames);
             SDL_SetWindowTitle(window, title);
         }
 
         SDL_Event event;
-        while (SDL_PollEvent(&event))
-        {
-            switch (event.type)
-            {
-            case SDL_QUIT:
-            {
+        while(SDL_PollEvent(&event)) {
+            switch(event.type) {
+            case SDL_QUIT: {
                 running = false;
-            }
-            break;
+            } break;
 
-            case SDL_KEYDOWN:
-            {
-                switch (event.key.keysym.sym)
-                {
-                case SDLK_ESCAPE:
-                {
+            case SDL_KEYDOWN: {
+                switch(event.key.keysym.sym) {
+                case SDLK_ESCAPE: {
                     running = false;
-                }
-                break;
+                } break;
 
-                case '1':
-                {
+                case '1': {
                     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-                }
-                break;
+                } break;
 
-                case '2':
-                {
+                case '2': {
                     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-                }
-                break;
+                } break;
 
-                case 'w':
-                {
+                case 'w': {
                     keyboardInput.up = true;
-                }
-                break;
+                } break;
 
-                case 's':
-                {
+                case 's': {
                     keyboardInput.down = true;
-                }
-                break;
+                } break;
 
-                case 'a':
-                {
+                case 'a': {
                     keyboardInput.left = true;
-                }
-                break;
+                } break;
 
-                case 'd':
-                {
+                case 'd': {
                     keyboardInput.right = true;
+                } break;
                 }
-                break;
-                }
-            }
-            break;
+            } break;
 
-            case SDL_KEYUP:
-            {
-                switch (event.key.keysym.sym)
-                {
-                case 'w':
-                {
+            case SDL_KEYUP: {
+                switch(event.key.keysym.sym) {
+                case 'w': {
                     keyboardInput.up = false;
-                }
-                break;
+                } break;
 
-                case 's':
-                {
+                case 's': {
                     keyboardInput.down = false;
-                }
-                break;
+                } break;
 
-                case 'a':
-                {
+                case 'a': {
                     keyboardInput.left = false;
-                }
-                break;
+                } break;
 
-                case 'd':
-                {
+                case 'd': {
                     keyboardInput.right = false;
-                }
-                break;
+                } break;
                 }
             }
 
-            case SDL_MOUSEMOTION:
-            {
+            case SDL_MOUSEMOTION: {
                 // TODO: Investigate, why pressing w/a/s/d causes really high motion values, in mousemotion
-                if (event.motion.yrel > 100)
-                {
+                if(event.motion.yrel > 100) {
                     break;
                 }
-                if (event.motion.xrel > 100)
-                {
+                if(event.motion.xrel > 100) {
                     break;
                 }
                 f32 sens = 0.1f;
-                f32 lim = 0.01f;
+                f32 lim  = 0.01f;
                 fp.yaw += (f32)event.motion.xrel * sens;
                 fp.yaw = fmod(fp.yaw, 360.f);
                 fp.pitch -= (f32)event.motion.yrel * sens;
                 fp.pitch = clamp(fp.pitch, -90.f + lim, 90.f - lim);
-            }
-            break;
+            } break;
             }
         }
 
@@ -765,41 +704,37 @@ i32 main(i32 argc, char **argv)
         }
 #endif
 
-        for (i32 i = 0; i < cubeCount; i += 3)
-        {
+        for(i32 i = 0; i < cubeCount; i += 3) {
             cubeRotations[i].angle += deltaTime;
             cubeRotations[i].angle = fmod(cubeRotations[i].angle, (PI * 2));
         }
 
-        for (i32 i = 1; i < cubeCount; i += 3)
-        {
+        for(i32 i = 1; i < cubeCount; i += 3) {
             cubeRotations[i].angle -= deltaTime;
             cubeRotations[i].angle = fmod(cubeRotations[i].angle, (PI * 2));
         }
 
-        for (i32 i = 2; i < cubeCount; i += 3)
-        {
+        for(i32 i = 2; i < cubeCount; i += 3) {
             cubeRotations[i].angle += 0.5f * deltaTime;
             cubeRotations[i].angle = fmod(cubeRotations[i].angle, (PI * 2));
         }
 
 // Draw cubes
 #if 1
-        for (i32 i = 0; i < cubeCount; i++)
-        {
+        for(i32 i = 0; i < cubeCount; i++) {
             // v3 scale = cubeScales[i];
-            const f32 s = 1.0f;
-            v3 scale = v3(s, s, s);
-            v3 position = cubePositions[i];
-            Mesh mesh = cubeMeshArray[i];
+            const f32 s       = 1.0f;
+            v3 scale          = v3(s, s, s);
+            v3 position       = cubePositions[i];
+            Mesh mesh         = cubeMeshArray[i];
             Rotation rotation = cubeRotations[i];
 
-            m4 m = m4(1.0f);
+            m4 m         = m4(1.0f);
             m4 translate = glm::translate(m, position);
-            m4 scaleM = glm::scale(m, scale);
-            m4 rotate = glm::rotate(m, rotation.angle, rotation.axis);
-            m4 model = scaleM * translate * rotate;
-            m4 mvp = projection * view * model;
+            m4 scaleM    = glm::scale(m, scale);
+            m4 rotate    = glm::rotate(m, rotation.angle, rotation.axis);
+            m4 model     = scaleM * translate * rotate;
+            m4 mvp       = projection * view * model;
 
             u32 mvpHandle = glGetUniformLocation(mesh.shaderProgram, "MVP");
             glUniformMatrix4fv(mvpHandle, 1, GL_FALSE, glm::value_ptr(mvp));
