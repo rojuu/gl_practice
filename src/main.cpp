@@ -214,8 +214,7 @@ main(i32 argc, char **argv) {
 
     // Load shaders
     u32 basicShader = loadShaders("data/shaders/basic.v", "data/shaders/basic.f");
-    if(
-        !basicShader) {
+    if(!basicShader) {
         printf("Error loading shaders.\n");
         return -1;
     }
@@ -223,9 +222,8 @@ main(i32 argc, char **argv) {
     //Load textures
     u32 texture0 = loadTextureJPG("data/textures/container.jpg", true);
     u32 texture1 = loadTexturePNG("data/textures/awesomeface.png", true);
-    if(
-        !texture0 ||
-        !texture1) {
+    if(!texture0 ||
+       !texture1) {
         printf("Error loading textures.\n");
         return -1;
     }
@@ -527,13 +525,13 @@ main(i32 argc, char **argv) {
 
     KeyboardInput keyboardInput = {};
 
+    b32 running     = true;
     f64 currentTime = (f32)SDL_GetPerformanceCounter() /
                       (f32)SDL_GetPerformanceFrequency();
     f64 lastTime       = 0;
     f64 deltaTime      = 0;
     i32 frameCounter   = 0;
     i32 lastFrameCount = 0;
-    b32 running        = true;
     f64 lastFpsTime    = 0;
     while(running) {
         lastTime    = currentTime;
