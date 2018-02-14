@@ -169,6 +169,12 @@ loadTexturePNG(const char *filename, bool flipVerticallyOnLoad) {
     return texture;
 }
 
+internal void
+setUniformM4(const char *name, u32 shader, m4 matrix) {
+    u32 handle = glGetUniformLocation(shader, name);
+    glUniformMatrix4fv(handle, 1, GL_FALSE, glm::value_ptr(matrix));
+}
+
 i32
 main(i32 argc, char **argv) {
     // Init SDL stuff
@@ -214,12 +220,15 @@ main(i32 argc, char **argv) {
 
     // Load shaders
     u32 basicShader = loadShaders("data/shaders/basic.v", "data/shaders/basic.f");
-    if(!basicShader) {
+    u32 lightShader = loadShaders("data/shaders/basic.v", "data/shaders/light.f");
+    if(!basicShader ||
+       !lightShader) {
         printf("Error loading shaders.\n");
         return -1;
     }
 
-    //Load textures
+//Load textures
+#if 0
     u32 texture0 = loadTextureJPG("data/textures/container.jpg", true);
     u32 texture1 = loadTexturePNG("data/textures/awesomeface.png", true);
     if(!texture0 ||
@@ -227,6 +236,7 @@ main(i32 argc, char **argv) {
         printf("Error loading textures.\n");
         return -1;
     }
+#endif
 
     // Object definitions
 
@@ -384,7 +394,8 @@ main(i32 argc, char **argv) {
         0.0f, 0.0f,
         0.0f, 1.0f};
 
-    //Quads
+//Quads
+#if 0
     v3 quadPositions[]{
         v3(0, 0, 0),
         v3(1, 0, 0),
@@ -447,22 +458,24 @@ main(i32 argc, char **argv) {
         quadMeshArray[i].shaderProgram = basicShader;
     }
     //END Quads
+#endif
 
-    //Cubes
+//Cubes
+#if 1
     v3 cubePositions[]{
         v3(0.0f, 0.0f, 0.0f),
-        v3(2.0f, 5.0f, -15.0f),
-        v3(-1.5f, -2.2f, -2.5f),
-        v3(-3.8f, -2.0f, -12.3f),
-        v3(2.4f, -0.4f, -3.5f),
-        v3(-1.7f, 3.0f, -7.5f),
-        v3(1.3f, -2.0f, -2.5f),
-        v3(1.5f, 2.0f, -2.5f),
-        v3(1.5f, 0.2f, -1.5f),
-        v3(-1.3f, 1.0f, -1.5f),
+        // v3(2.0f, 5.0f, -15.0f),
+        // v3(-1.5f, -2.2f, -2.5f),
+        // v3(-3.8f, -2.0f, -12.3f),
+        // v3(2.4f, -0.4f, -3.5f),
+        // v3(-1.7f, 3.0f, -7.5f),
+        // v3(1.3f, -2.0f, -2.5f),
+        // v3(1.5f, 2.0f, -2.5f),
+        // v3(1.5f, 0.2f, -1.5f),
+        // v3(-1.3f, 1.0f, -1.5f),
     };
     Rotation cubeRotations[]{
-        {v3(1, 0, 1), glm::radians((float)10)},
+        {v3(0, 1, 0), glm::radians((float)30)},
         {v3(1, 1, 1), glm::radians((float)24)},
         {v3(0, 1, 1), glm::radians((float)30)},
         {v3(1, 1, 0), glm::radians((float)60)},
@@ -481,40 +494,55 @@ main(i32 argc, char **argv) {
 
     u32 cubeVertexBuffer;
     glGenBuffers(1, &cubeVertexBuffer);
-    u32 cubeColorBuffer;
-    glGenBuffers(1, &cubeColorBuffer);
-    u32 cubeTexCoordBuffer;
-    glGenBuffers(1, &cubeTexCoordBuffer);
+    // u32 cubeColorBuffer;
+    // glGenBuffers(1, &cubeColorBuffer);
+    // u32 cubeTexCoordBuffer;
+    // glGenBuffers(1, &cubeTexCoordBuffer);
 
     glBindVertexArray(cubeVertexArray);
-
     glBindBuffer(GL_ARRAY_BUFFER, cubeVertexBuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertexPositions), cubeVertexPositions, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(0);
 
-    glBindBuffer(GL_ARRAY_BUFFER, cubeColorBuffer);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertexColors), cubeVertexColors, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(1);
+    // glBindBuffer(GL_ARRAY_BUFFER, cubeColorBuffer);
+    // glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    // glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertexColors), cubeVertexColors, GL_STATIC_DRAW);
+    // glEnableVertexAttribArray(1);
 
-    glBindBuffer(GL_ARRAY_BUFFER, cubeTexCoordBuffer);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, 0);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeTexCoords), cubeTexCoords, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(2);
+    // glBindBuffer(GL_ARRAY_BUFFER, cubeTexCoordBuffer);
+    // glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, 0);
+    // glBufferData(GL_ARRAY_BUFFER, sizeof(cubeTexCoords), cubeTexCoords, GL_STATIC_DRAW);
+    // glEnableVertexAttribArray(2);
 
-    glUseProgram(basicShader);
-    glUniform1i(glGetUniformLocation(basicShader, "inTexture0"), 0);
-    glUniform1i(glGetUniformLocation(basicShader, "inTexture1"), 1);
+    // glUseProgram(basicShader);
+    // glUniform1i(glGetUniformLocation(basicShader, "inTexture0"), 0);
+    // glUniform1i(glGetUniformLocation(basicShader, "inTexture1"), 1);
+
+    u32 lightVertexArray;
+    glGenVertexArrays(1, &lightVertexArray);
+    glBindVertexArray(lightVertexArray);
+    glBindBuffer(GL_ARRAY_BUFFER, cubeVertexBuffer);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(0);
+
+    const int cubeTriangleCount = arrayCount(cubeVertexPositions) / 3;
 
     for(i32 i = 0; i < cubeCount; ++i) {
         cubeMeshArray[i].vao           = cubeVertexArray;
-        cubeMeshArray[i].count         = arrayCount(cubeVertexPositions) / 3;
+        cubeMeshArray[i].count         = cubeTriangleCount;
         cubeMeshArray[i].shaderProgram = basicShader;
     }
-    //END cubes
+
+    glUseProgram(basicShader);
+    glUniform3f(glGetUniformLocation(basicShader, "objectColor"), 1.0f, 0.5f, 0.31f);
+    glUniform3f(glGetUniformLocation(basicShader, "lightColor"), 1.0f, 1.0f, 1.0f);
+//END cubes
+#endif
 
     v3 cameraPos = v3(0, 0, 0);
+
+    v3 lightPos = v3(1.2f, 1.0f, 2.0f);
 
     FPCamera fp;
     fp.position  = v3(0, 0, -3);
@@ -668,7 +696,7 @@ main(i32 argc, char **argv) {
         // );
 
         m4 view = glm::lookAt(
-            v3(0, 0, 3),
+            v3(1, 2, 6),
             v3(0, 0, 0),
             v3(0, 1, 0));
 
@@ -702,6 +730,8 @@ main(i32 argc, char **argv) {
         }
 #endif
 
+// Rotate cubes
+#if 0
         for(i32 i = 0; i < cubeCount; i += 3) {
             cubeRotations[i].angle += deltaTime;
             cubeRotations[i].angle = fmod(cubeRotations[i].angle, (PI * 2));
@@ -716,9 +746,31 @@ main(i32 argc, char **argv) {
             cubeRotations[i].angle += 0.5f * deltaTime;
             cubeRotations[i].angle = fmod(cubeRotations[i].angle, (PI * 2));
         }
+#endif
+
+// Draw light source
+#if 1
+        {
+            m4 model = m4(1.0f);
+            model    = glm::translate(model, lightPos);
+            model    = glm::scale(model, v3(0.2f));
+
+            setUniformM4("model", lightShader, model);
+            setUniformM4("view", lightShader, view);
+            setUniformM4("projection", lightShader, projection);
+
+            glUseProgram(lightShader);
+            glBindVertexArray(lightVertexArray);
+            glDrawArrays(GL_TRIANGLES, 0, cubeTriangleCount);
+            GLenum err;
+            while((err = glGetError()) != GL_NO_ERROR) {
+                printf("GL error %x\n", err);
+            }
+        }
+#endif
 
 // Draw cubes
-#if 1
+#if 0
         for(i32 i = 0; i < cubeCount; i++) {
             // v3 scale = cubeScales[i];
             const f32 s       = 1.0f;
@@ -727,21 +779,23 @@ main(i32 argc, char **argv) {
             Mesh mesh         = cubeMeshArray[i];
             Rotation rotation = cubeRotations[i];
 
-            m4 m         = m4(1.0f);
-            m4 translate = glm::translate(m, position);
-            m4 scaleM    = glm::scale(m, scale);
-            m4 rotate    = glm::rotate(m, rotation.angle, rotation.axis);
-            m4 model     = scaleM * translate * rotate;
-            m4 mvp       = projection * view * model;
+            m4 model     = m4(1.0f);
+            m4 rotate    = glm::rotate(model, rotation.angle, rotation.axis);
+            m4 translate = glm::translate(model, position);
+            m4 scaleM    = glm::scale(model, scale);
+            // m4 mvp       = projection * view * model;
 
-            u32 mvpHandle = glGetUniformLocation(mesh.shaderProgram, "MVP");
-            glUniformMatrix4fv(mvpHandle, 1, GL_FALSE, glm::value_ptr(mvp));
+            // u32 mvpHandle = glGetUniformLocation(mesh.shaderProgram, "MVP");
+            // glUniformMatrix4fv(mvpHandle, 1, GL_FALSE, glm::value_ptr(mvp));
+            setUniformM4("model", mesh.shaderProgram, model);
+            setUniformM4("view", mesh.shaderProgram, view);
+            setUniformM4("projection", mesh.shaderProgram, projection);
 
             glUseProgram(mesh.shaderProgram);
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, texture0);
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, texture1);
+            // glActiveTexture(GL_TEXTURE0);
+            // glBindTexture(GL_TEXTURE_2D, texture0);
+            // glActiveTexture(GL_TEXTURE1);
+            // glBindTexture(GL_TEXTURE_2D, texture1);
             glBindVertexArray(mesh.vao);
             glDrawArrays(GL_TRIANGLES, 0, mesh.count);
         }
