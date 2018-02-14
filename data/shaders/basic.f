@@ -19,5 +19,5 @@ void main() {
     vec4 color1 = texture(inTexture1, texCoord);
     color = mix(color0, color1, color1.a * 0.2);
     */
-    color = vec4(lightColor * objectColor, 1.0);
+    color = vec4(lightColor * objectColor, 1.0f);
 }

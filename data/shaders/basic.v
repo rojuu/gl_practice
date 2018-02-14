@@ -14,7 +14,7 @@ out vec2 texCoord;
 */
 
 void main(){
-    gl_Position =  projection * view * model * vec4(inVertexPosition, 1);
+    gl_Position = projection * view * model * vec4(inVertexPosition, 1.0f);
     /*
     vertexColor = inVertexColor;
     texCoord = inTexCoord;

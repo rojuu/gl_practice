@@ -494,6 +494,8 @@ main(i32 argc, char **argv) {
 
     u32 cubeVertexBuffer;
     glGenBuffers(1, &cubeVertexBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, cubeVertexBuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertexPositions), cubeVertexPositions, GL_STATIC_DRAW);
     // u32 cubeColorBuffer;
     // glGenBuffers(1, &cubeColorBuffer);
     // u32 cubeTexCoordBuffer;
@@ -501,7 +503,6 @@ main(i32 argc, char **argv) {
 
     glBindVertexArray(cubeVertexArray);
     glBindBuffer(GL_ARRAY_BUFFER, cubeVertexBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertexPositions), cubeVertexPositions, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(0);
 
@@ -515,12 +516,9 @@ main(i32 argc, char **argv) {
     // glBufferData(GL_ARRAY_BUFFER, sizeof(cubeTexCoords), cubeTexCoords, GL_STATIC_DRAW);
     // glEnableVertexAttribArray(2);
 
-    // glUseProgram(basicShader);
-    // glUniform1i(glGetUniformLocation(basicShader, "inTexture0"), 0);
-    // glUniform1i(glGetUniformLocation(basicShader, "inTexture1"), 1);
-
     u32 lightVertexArray;
     glGenVertexArrays(1, &lightVertexArray);
+
     glBindVertexArray(lightVertexArray);
     glBindBuffer(GL_ARRAY_BUFFER, cubeVertexBuffer);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
@@ -534,24 +532,17 @@ main(i32 argc, char **argv) {
         cubeMeshArray[i].shaderProgram = basicShader;
     }
 
-    glUseProgram(basicShader);
-    glUniform3f(glGetUniformLocation(basicShader, "objectColor"), 1.0f, 0.5f, 0.31f);
-    glUniform3f(glGetUniformLocation(basicShader, "lightColor"), 1.0f, 1.0f, 1.0f);
+        // glUseProgram(basicShader);
+        // glUniform1i(glGetUniformLocation(basicShader, "inTexture0"), 0);
+        // glUniform1i(glGetUniformLocation(basicShader, "inTexture1"), 1);
+
+        glUseProgram(basicShader);
+        glUniform3f(glGetUniformLocation(basicShader, "objectColor"), 1.0f, 0.5f, 0.31f);
+        glUniform3f(glGetUniformLocation(basicShader, "lightColor"), 1.0f, 1.0f, 1.0f);
+
 //END cubes
 #endif
-
-    v3 cameraPos = v3(0, 0, 0);
-
     v3 lightPos = v3(1.2f, 1.0f, 2.0f);
-
-    FPCamera fp;
-    fp.position  = v3(0, 0, -3);
-    fp.pitch     = 0.f;
-    fp.yaw       = 90.f;
-    fp.speed     = 10.f;
-    fp.eyeHeight = 1.8f;
-
-    KeyboardInput keyboardInput = {};
 
     b32 running     = true;
     f64 currentTime = (f32)SDL_GetPerformanceCounter() /
@@ -598,88 +589,10 @@ main(i32 argc, char **argv) {
                 case '2': {
                     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
                 } break;
-
-                case 'w': {
-                    keyboardInput.up = true;
-                } break;
-
-                case 's': {
-                    keyboardInput.down = true;
-                } break;
-
-                case 'a': {
-                    keyboardInput.left = true;
-                } break;
-
-                case 'd': {
-                    keyboardInput.right = true;
-                } break;
                 }
-            } break;
-
-            case SDL_KEYUP: {
-                switch(event.key.keysym.sym) {
-                case 'w': {
-                    keyboardInput.up = false;
-                } break;
-
-                case 's': {
-                    keyboardInput.down = false;
-                } break;
-
-                case 'a': {
-                    keyboardInput.left = false;
-                } break;
-
-                case 'd': {
-                    keyboardInput.right = false;
-                } break;
-                }
-            }
-
-            case SDL_MOUSEMOTION: {
-                // TODO: Investigate, why pressing w/a/s/d causes really high motion values, in mousemotion
-                if(event.motion.yrel > 100) {
-                    break;
-                }
-                if(event.motion.xrel > 100) {
-                    break;
-                }
-                f32 sens = 0.1f;
-                f32 lim  = 0.01f;
-                fp.yaw += (f32)event.motion.xrel * sens;
-                fp.yaw = fmod(fp.yaw, 360.f);
-                fp.pitch -= (f32)event.motion.yrel * sens;
-                fp.pitch = clamp(fp.pitch, -90.f + lim, 90.f - lim);
             } break;
             }
         }
-
-// Movement
-#if 0
-		{
-			fp.direction.x = cos(glm::radians(fp.pitch)) * cos(glm::radians(fp.yaw));
-			fp.direction.y = sin(glm::radians(fp.pitch));
-			fp.direction.z = cos(glm::radians(fp.pitch)) * sin(glm::radians(fp.yaw));
-			fp.direction = noz(fp.direction);
-
-			float y = 0.f;
-			float x = 0.f;
-			y+=(f32)keyboardInput.up;
-			y-=(f32)keyboardInput.down;
-			x+=(f32)keyboardInput.right;
-			x-=(f32)keyboardInput.left;
-
-			v2 input = noz(v2(x, y));
-
-			fp.position += fp.direction * input.y * fp.speed * deltaTime;
-			fp.position += glm::cross(fp.direction, v3(0,1,0)) * input.x * fp.speed * deltaTime;
-			fp.position.y = fp.eyeHeight;
-
-			v3* pos = &fp.position;
-			// printf("pitch %f, yaw %f, pos.x %f, pos.y %f, pos.z %f\r", fp.pitch, fp.yaw, pos->x, pos->y, pos->z);
-		}
-#endif
 
         // glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -753,7 +666,7 @@ main(i32 argc, char **argv) {
         {
             m4 model = m4(1.0f);
             model    = glm::translate(model, lightPos);
-            model    = glm::scale(model, v3(0.2f));
+            model    = glm::scale(model, v3(0.3f));
 
             setUniformM4("model", lightShader, model);
             setUniformM4("view", lightShader, view);
@@ -764,7 +677,7 @@ main(i32 argc, char **argv) {
             glDrawArrays(GL_TRIANGLES, 0, cubeTriangleCount);
             GLenum err;
             while((err = glGetError()) != GL_NO_ERROR) {
-                printf("GL error %x\n", err);
+                printf("GL error 0x%x\n", err);
             }
         }
 #endif
@@ -773,16 +686,15 @@ main(i32 argc, char **argv) {
 #if 0
         for(i32 i = 0; i < cubeCount; i++) {
             // v3 scale = cubeScales[i];
-            const f32 s       = 1.0f;
-            v3 scale          = v3(s, s, s);
+            v3 scale          = v3(1.0f);
             v3 position       = cubePositions[i];
             Mesh mesh         = cubeMeshArray[i];
             Rotation rotation = cubeRotations[i];
 
-            m4 model     = m4(1.0f);
-            m4 rotate    = glm::rotate(model, rotation.angle, rotation.axis);
-            m4 translate = glm::translate(model, position);
-            m4 scaleM    = glm::scale(model, scale);
+            m4 model = m4(1.0f);
+            model    = glm::translate(model, position);
+            model    = glm::rotate(model, rotation.angle, rotation.axis);
+            model    = glm::scale(model, scale);
             // m4 mvp       = projection * view * model;
 
             // u32 mvpHandle = glGetUniformLocation(mesh.shaderProgram, "MVP");
@@ -798,6 +710,11 @@ main(i32 argc, char **argv) {
             // glBindTexture(GL_TEXTURE_2D, texture1);
             glBindVertexArray(mesh.vao);
             glDrawArrays(GL_TRIANGLES, 0, mesh.count);
+
+            // GLenum err;
+            // while((err = glGetError()) != GL_NO_ERROR) {
+            //     printf("GL error 0x%x\n", err);
+            // }
         }
 #endif
 
