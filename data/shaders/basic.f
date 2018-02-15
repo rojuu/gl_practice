@@ -20,4 +20,5 @@ void main() {
     color = mix(color0, color1, color1.a * 0.2);
     */
     color = vec4(lightColor * objectColor, 1.0f);
+    // color = vec4(1.0f);
 }

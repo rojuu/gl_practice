@@ -169,10 +169,18 @@ loadTexturePNG(const char *filename, bool flipVerticallyOnLoad) {
     return texture;
 }
 
+//TODO: Should these set uniform functions do glUseProgram every time?
+// I got confused, because I wasn't doing that before using these functions.
 internal void
-setUniformM4(const char *name, u32 shader, m4 matrix) {
+setUniformM4(u32 shader, const char *name, m4 matrix) {
     u32 handle = glGetUniformLocation(shader, name);
     glUniformMatrix4fv(handle, 1, GL_FALSE, glm::value_ptr(matrix));
+}
+
+internal void
+setUniform3f(u32 shader, const char *name, f32 f1, f32 f2, f32 f3) {
+    u32 handle = glGetUniformLocation(shader, name);
+    glUniform3f(handle, f1, f2, f3);
 }
 
 i32
@@ -532,13 +540,13 @@ main(i32 argc, char **argv) {
         cubeMeshArray[i].shaderProgram = basicShader;
     }
 
-        // glUseProgram(basicShader);
-        // glUniform1i(glGetUniformLocation(basicShader, "inTexture0"), 0);
-        // glUniform1i(glGetUniformLocation(basicShader, "inTexture1"), 1);
+    // glUseProgram(basicShader);
+    // glUniform1i(glGetUniformLocation(basicShader, "inTexture0"), 0);
+    // glUniform1i(glGetUniformLocation(basicShader, "inTexture1"), 1);
 
-        glUseProgram(basicShader);
-        glUniform3f(glGetUniformLocation(basicShader, "objectColor"), 1.0f, 0.5f, 0.31f);
-        glUniform3f(glGetUniformLocation(basicShader, "lightColor"), 1.0f, 1.0f, 1.0f);
+    glUseProgram(basicShader);
+    setUniform3f(basicShader, "objectColor", 1.0f, 0.5f, 0.31f);
+    setUniform3f(basicShader, "lightColor", 1.0f, 1.0f, 1.0f);
 
 //END cubes
 #endif
@@ -668,22 +676,19 @@ main(i32 argc, char **argv) {
             model    = glm::translate(model, lightPos);
             model    = glm::scale(model, v3(0.3f));
 
-            setUniformM4("model", lightShader, model);
-            setUniformM4("view", lightShader, view);
-            setUniformM4("projection", lightShader, projection);
-
             glUseProgram(lightShader);
+
+            setUniformM4(lightShader, "model", model);
+            setUniformM4(lightShader, "view", view);
+            setUniformM4(lightShader, "projection", projection);
+
             glBindVertexArray(lightVertexArray);
             glDrawArrays(GL_TRIANGLES, 0, cubeTriangleCount);
-            GLenum err;
-            while((err = glGetError()) != GL_NO_ERROR) {
-                printf("GL error 0x%x\n", err);
-            }
         }
 #endif
 
 // Draw cubes
-#if 0
+#if 1
         for(i32 i = 0; i < cubeCount; i++) {
             // v3 scale = cubeScales[i];
             v3 scale          = v3(1.0f);
@@ -697,24 +702,18 @@ main(i32 argc, char **argv) {
             model    = glm::scale(model, scale);
             // m4 mvp       = projection * view * model;
 
-            // u32 mvpHandle = glGetUniformLocation(mesh.shaderProgram, "MVP");
-            // glUniformMatrix4fv(mvpHandle, 1, GL_FALSE, glm::value_ptr(mvp));
-            setUniformM4("model", mesh.shaderProgram, model);
-            setUniformM4("view", mesh.shaderProgram, view);
-            setUniformM4("projection", mesh.shaderProgram, projection);
-
             glUseProgram(mesh.shaderProgram);
+
+            setUniformM4(mesh.shaderProgram, "model", model);
+            setUniformM4(mesh.shaderProgram, "view", view);
+            setUniformM4(mesh.shaderProgram, "projection", projection);
+
             // glActiveTexture(GL_TEXTURE0);
             // glBindTexture(GL_TEXTURE_2D, texture0);
             // glActiveTexture(GL_TEXTURE1);
             // glBindTexture(GL_TEXTURE_2D, texture1);
             glBindVertexArray(mesh.vao);
             glDrawArrays(GL_TRIANGLES, 0, mesh.count);
-
-            // GLenum err;
-            // while((err = glGetError()) != GL_NO_ERROR) {
-            //     printf("GL error 0x%x\n", err);
-            // }
         }
 #endif
 
