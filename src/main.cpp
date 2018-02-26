@@ -183,6 +183,11 @@ setUniform3f(u32 shader, const char *name, f32 f1, f32 f2, f32 f3) {
     glUniform3f(handle, f1, f2, f3);
 }
 
+internal void
+setUniformV3(u32 shader, const char *name, v3 v) {
+    setUniform3f(shader, name, v.x, v.y, v.z);
+}
+
 i32
 main(i32 argc, char **argv) {
     // Init SDL stuff
@@ -315,6 +320,49 @@ main(i32 argc, char **argv) {
         0.5f, 0.5f, 0.5f,
         -0.5f, 0.5f, 0.5f,
         -0.5f, 0.5f, -0.5f};
+
+    const f32 cubeNormals[] = {
+        0.0f, 0.0f, -1.0f,
+        0.0f, 0.0f, -1.0f,
+        0.0f, 0.0f, -1.0f,
+        0.0f, 0.0f, -1.0f,
+        0.0f, 0.0f, -1.0f,
+        0.0f, 0.0f, -1.0f,
+
+        0.0f, 0.0f, 1.0f,
+        0.0f, 0.0f, 1.0f,
+        0.0f, 0.0f, 1.0f,
+        0.0f, 0.0f, 1.0f,
+        0.0f, 0.0f, 1.0f,
+        0.0f, 0.0f, 1.0f,
+
+        1.0f, 0.0f, 0.0f,
+        1.0f, 0.0f, 0.0f,
+        1.0f, 0.0f, 0.0f,
+        1.0f, 0.0f, 0.0f,
+        1.0f, 0.0f, 0.0f,
+        1.0f, 0.0f, 0.0f,
+
+        1.0f, 0.0f, 0.0f,
+        1.0f, 0.0f, 0.0f,
+        1.0f, 0.0f, 0.0f,
+        1.0f, 0.0f, 0.0f,
+        1.0f, 0.0f, 0.0f,
+        1.0f, 0.0f, 0.0f,
+
+        0.0f, -1.0f, 0.0f,
+        0.0f, -1.0f, 0.0f,
+        0.0f, -1.0f, 0.0f,
+        0.0f, -1.0f, 0.0f,
+        0.0f, -1.0f, 0.0f,
+        0.0f, -1.0f, 0.0f,
+
+        0.0f, 1.0f, 0.0f,
+        0.0f, 1.0f, 0.0f,
+        0.0f, 1.0f, 0.0f,
+        0.0f, 1.0f, 0.0f,
+        0.0f, 1.0f, 0.0f,
+        0.0f, 1.0f, 0.0f};
 
     const f32 cubeVertexColors[] = {
         1.0f, 1.0f, 1.0f,
@@ -504,15 +552,27 @@ main(i32 argc, char **argv) {
     glGenBuffers(1, &cubeVertexBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, cubeVertexBuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertexPositions), cubeVertexPositions, GL_STATIC_DRAW);
+
+    u32 cubeNormalBuffer;
+    glGenBuffers(1, &cubeNormalBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, cubeNormalBuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeNormals), cubeNormals, GL_STATIC_DRAW);
+
     // u32 cubeColorBuffer;
     // glGenBuffers(1, &cubeColorBuffer);
     // u32 cubeTexCoordBuffer;
     // glGenBuffers(1, &cubeTexCoordBuffer);
 
+    //Make cube vertex array
     glBindVertexArray(cubeVertexArray);
+
     glBindBuffer(GL_ARRAY_BUFFER, cubeVertexBuffer);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, cubeNormalBuffer);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(1);
 
     // glBindBuffer(GL_ARRAY_BUFFER, cubeColorBuffer);
     // glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
@@ -524,6 +584,7 @@ main(i32 argc, char **argv) {
     // glBufferData(GL_ARRAY_BUFFER, sizeof(cubeTexCoords), cubeTexCoords, GL_STATIC_DRAW);
     // glEnableVertexAttribArray(2);
 
+    //Make light vertex array
     u32 lightVertexArray;
     glGenVertexArrays(1, &lightVertexArray);
 
@@ -532,6 +593,7 @@ main(i32 argc, char **argv) {
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(0);
 
+    //Cube transform data;
     const int cubeTriangleCount = arrayCount(cubeVertexPositions) / 3;
 
     for(i32 i = 0; i < cubeCount; ++i) {
@@ -540,17 +602,20 @@ main(i32 argc, char **argv) {
         cubeMeshArray[i].shaderProgram = basicShader;
     }
 
-    // glUseProgram(basicShader);
-    // glUniform1i(glGetUniformLocation(basicShader, "inTexture0"), 0);
-    // glUniform1i(glGetUniformLocation(basicShader, "inTexture1"), 1);
+        // glUseProgram(basicShader);
+        // glUniform1i(glGetUniformLocation(basicShader, "inTexture0"), 0);
+        // glUniform1i(glGetUniformLocation(basicShader, "inTexture1"), 1);
+#endif
+    //END cubes
+
+    v3 lightPos = v3(1.2f, 1.0f, 2.0f);
+    v3 viewPos  = v3(0.0f, 0.0f, 3.0f);
 
     glUseProgram(basicShader);
     setUniform3f(basicShader, "objectColor", 1.0f, 0.5f, 0.31f);
     setUniform3f(basicShader, "lightColor", 1.0f, 1.0f, 1.0f);
-
-//END cubes
-#endif
-    v3 lightPos = v3(1.2f, 1.0f, 2.0f);
+    setUniformV3(basicShader, "lightPos", lightPos);
+    setUniformV3(basicShader, "viewPos", viewPos);
 
     b32 running     = true;
     f64 currentTime = (f32)SDL_GetPerformanceCounter() /
@@ -617,7 +682,7 @@ main(i32 argc, char **argv) {
         // );
 
         m4 view = glm::lookAt(
-            v3(1, 2, 6),
+            viewPos,
             v3(0, 0, 0),
             v3(0, 1, 0));
 
