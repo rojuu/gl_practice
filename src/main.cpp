@@ -32,6 +32,7 @@
 #include "types.cpp"
 #include "math.cpp"
 
+#include "shaders.h"
 #include "objects.h"
 
 internal const f32 PI = glm::pi<f32>();
@@ -40,51 +41,15 @@ internal const f32 PI = glm::pi<f32>();
 #define SCREEN_HEIGHT 768
 
 internal u32
-loadShaders(const char *vertexFilePath, const char *fragmentFilePath) {
-    // Create the shaders
+compileShader(const char *vertexShaderCode, const char *fragmentShaderCode) {
     u32 vertexShaderID   = glCreateShader(GL_VERTEX_SHADER);
     u32 fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
-
-    // TODO: is CRT better for file loading than C++ std library?
-    // Should we do file loading in a completely different way?
-
-    // TODO: Is std::string slow for this? Wouldn't it cause a lot of allocations?
-
-    // Read the Vertex Shader code from the file
-    std::string vertexShaderCode;
-    std::ifstream vertexShaderStream(vertexFilePath, std::ios::in);
-    if(vertexShaderStream.is_open()) {
-        std::string Line = "";
-        while(getline(vertexShaderStream, Line)) {
-            vertexShaderCode += "\n" + Line;
-        }
-        vertexShaderStream.close();
-    } else {
-        printf("Cannot open %s\n", vertexFilePath);
-        return 0;
-    }
-
-    // Read the Fragment Shader code from the file
-    std::string fragmentShaderCode;
-    std::ifstream fragmentShaderStream(fragmentFilePath, std::ios::in);
-    if(fragmentShaderStream.is_open()) {
-        std::string Line = "";
-        while(getline(fragmentShaderStream, Line)) {
-            fragmentShaderCode += "\n" + Line;
-        }
-        fragmentShaderStream.close();
-    } else {
-        printf("Cannot open %s\n", fragmentFilePath);
-        return 0;
-    }
 
     i32 result = 0;
     i32 infoLogLength;
 
     // Compile Vertex Shader
-    printf("Compiling shader : %s\n", vertexFilePath);
-    char const *vertexSourcePointer = vertexShaderCode.c_str();
-    glShaderSource(vertexShaderID, 1, &vertexSourcePointer, NULL);
+    glShaderSource(vertexShaderID, 1, &vertexShaderCode, NULL);
     glCompileShader(vertexShaderID);
 
     // Check Vertex Shader
@@ -97,9 +62,7 @@ loadShaders(const char *vertexFilePath, const char *fragmentFilePath) {
     }
 
     // Compile Fragment Shader
-    printf("Compiling shader : %s\n", fragmentFilePath);
-    char const *fragmentSourcePointer = fragmentShaderCode.c_str();
-    glShaderSource(fragmentShaderID, 1, &fragmentSourcePointer, NULL);
+    glShaderSource(fragmentShaderID, 1, &fragmentShaderCode, NULL);
     glCompileShader(fragmentShaderID);
 
     // Check Fragment Shader
@@ -112,7 +75,6 @@ loadShaders(const char *vertexFilePath, const char *fragmentFilePath) {
     }
 
     // Link the program
-    printf("Linking program\n");
     u32 programID = glCreateProgram();
     glAttachShader(programID, vertexShaderID);
     glAttachShader(programID, fragmentShaderID);
@@ -234,8 +196,8 @@ main(i32 argc, char **argv) {
     glDepthFunc(GL_LESS);
 
     // Load shaders
-    u32 basicShader = loadShaders("data/shaders/basic.v", "data/shaders/basic.f");
-    u32 lightShader = loadShaders("data/shaders/basic.v", "data/shaders/light.f");
+    u32 basicShader = compileShader(basic_vertex_shader, basic_fragment_shader);
+    u32 lightShader = compileShader(basic_vertex_shader, light_fragment_shader);
     if(!basicShader ||
        !lightShader) {
         printf("Error loading shaders.\n");
