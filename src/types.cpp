@@ -16,24 +16,28 @@ typedef i16 b16;
 typedef i32 b32;
 typedef i64 b64;
 
-typedef glm::vec2 v2;
-typedef glm::vec3 v3;
-typedef glm::vec4 v4;
+typedef glm::vec2 Vec2;
+typedef glm::vec3 Vec3;
+typedef glm::vec4 Vec4;
 
-typedef glm::mat2 m2;
-typedef glm::mat3 m3;
-typedef glm::mat4 m4;
+typedef glm::mat2 Mat2;
+typedef glm::mat3 Mat3;
+typedef glm::mat4 Mat4;
 
 struct FPCamera {
-    v3 position;
-    v3 direction;
+    Vec2 position;
+    Vec2 direction;
     f32 yaw, pitch;
     f32 speed;
     f32 eyeHeight;
 };
 
+//TODO: Make this a bitmask
 struct KeyboardInput {
-    b32 left, right, up, down;
+    b32 left;
+    b32 right;
+    b32 up;
+    b32 down;
 };
 
 struct Mesh {
@@ -43,6 +47,6 @@ struct Mesh {
 };
 
 struct Rotation {
-    v3 axis;
+    Vec3 axis;
     f32 angle;
 };

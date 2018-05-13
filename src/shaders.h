@@ -1,3 +1,9 @@
+
+/*
+  TODO: 
+    - Should we actually switch back to having these in separate text files?
+*/
+
 const char *basic_fragment_shader = R"FOO(
 #version 330 core
 out vec4 color;

@@ -15,18 +15,6 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-/** TODO: 
- * 
- * Should we actually use windows.h rather than SDL?
- * If we'd do that, we could use some useful windows API calls.
- * Maybe still use SDL, but only use those calls for useful stuff?
- * How would I go about portability in a situation like that?
- * 
- **/
-
-#define internal static
-
-//#define arrayCount(arr) (sizeof(arr)/sizeof(*arr))
 #define arrayCount(x) ((sizeof(x) / sizeof(0 [x])) / ((size_t)(!(sizeof(x) % sizeof(0 [x])))))
 
 #include "types.cpp"
@@ -35,12 +23,12 @@
 #include "shaders.h"
 #include "objects.h"
 
-internal const f32 PI = glm::pi<f32>();
+static const f32 PI = glm::pi<f32>();
 
 #define SCREEN_WIDTH 1024
 #define SCREEN_HEIGHT 768
 
-internal u32
+static u32
 compileShader(const char *vertexShaderCode, const char *fragmentShaderCode) {
     u32 vertexShaderID   = glCreateShader(GL_VERTEX_SHADER);
     u32 fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
@@ -98,7 +86,7 @@ compileShader(const char *vertexShaderCode, const char *fragmentShaderCode) {
     return programID;
 }
 
-internal u32
+static u32
 loadTexture(const char *filename, bool flipVerticallyOnLoad, GLint internalFormat, GLenum format) {
     u32 texture;
     glGenTextures(1, &texture);
@@ -121,13 +109,13 @@ loadTexture(const char *filename, bool flipVerticallyOnLoad, GLint internalForma
     return texture;
 }
 
-internal inline u32
+static inline u32
 loadTextureJPG(const char *filename, bool flipVerticallyOnLoad) {
     u32 texture = loadTexture(filename, flipVerticallyOnLoad, GL_RGB, GL_RGB);
     return texture;
 }
 
-internal inline u32
+static inline u32
 loadTexturePNG(const char *filename, bool flipVerticallyOnLoad) {
     u32 texture = loadTexture(filename, flipVerticallyOnLoad, GL_RGBA, GL_RGBA);
     return texture;
@@ -135,20 +123,20 @@ loadTexturePNG(const char *filename, bool flipVerticallyOnLoad) {
 
 //TODO: Should these set uniform functions do glUseProgram every time?
 // I got confused, because I wasn't doing that before using these functions.
-internal void
-setUniformM4(u32 shader, const char *name, m4 matrix) {
+static void
+setUniformMat4(u32 shader, const char *name, Mat4 matrix) {
     u32 handle = glGetUniformLocation(shader, name);
     glUniformMatrix4fv(handle, 1, GL_FALSE, glm::value_ptr(matrix));
 }
 
-internal void
+static void
 setUniform3f(u32 shader, const char *name, f32 f1, f32 f2, f32 f3) {
     u32 handle = glGetUniformLocation(shader, name);
     glUniform3f(handle, f1, f2, f3);
 }
 
-internal void
-setUniformV3(u32 shader, const char *name, v3 v) {
+static void
+setUniformVec3(u32 shader, const char *name, Vec3 v) {
     setUniform3f(shader, name, v.x, v.y, v.z);
 }
 
@@ -217,23 +205,23 @@ main(i32 argc, char **argv) {
 
 //Quads
 #if 0
-    v3 quadPositions[]{
-        v3(0, 0, 0),
-        v3(1, 0, 0),
-        v3(0, 1, 0),
-        v3(0, 0, 0),
+    Vec3 quadPositions[]{
+        Vec3(0, 0, 0),
+        Vec3(1, 0, 0),
+        Vec3(0, 1, 0),
+        Vec3(0, 0, 0),
     };
     Rotation quadRotations[]{
-        {v3(0, 0, 1), glm::radians((float)0)},
-        {v3(0, 0, 1), glm::radians((float)0)},
-        {v3(0, 0, 1), glm::radians((float)30)},
-        {v3(0, 0, 1), glm::radians((float)60)},
+        {Vec3(0, 0, 1), glm::radians((float)0)},
+        {Vec3(0, 0, 1), glm::radians((float)0)},
+        {Vec3(0, 0, 1), glm::radians((float)30)},
+        {Vec3(0, 0, 1), glm::radians((float)60)},
     };
-    v3 quadScales[]{
-        v3(1.0f, 1.0f, 1.0f),
-        v3(0.1f, 0.1f, 1.0f),
-        v3(0.5f, 0.5f, 1.0f),
-        v3(2.5f, 0.4f, 1.0f),
+    Vec3 quadScales[]{
+        Vec3(1.0f, 1.0f, 1.0f),
+        Vec3(0.1f, 0.1f, 1.0f),
+        Vec3(0.5f, 0.5f, 1.0f),
+        Vec3(2.5f, 0.4f, 1.0f),
     };
 
     const i32 quadCount = 1;
@@ -283,29 +271,29 @@ main(i32 argc, char **argv) {
 
 //Cubes
 #if 1
-    v3 cubePositions[]{
-        v3(0.0f, 0.0f, 0.0f),
-        // v3(2.0f, 5.0f, -15.0f),
-        // v3(-1.5f, -2.2f, -2.5f),
-        // v3(-3.8f, -2.0f, -12.3f),
-        // v3(2.4f, -0.4f, -3.5f),
-        // v3(-1.7f, 3.0f, -7.5f),
-        // v3(1.3f, -2.0f, -2.5f),
-        // v3(1.5f, 2.0f, -2.5f),
-        // v3(1.5f, 0.2f, -1.5f),
-        // v3(-1.3f, 1.0f, -1.5f),
+    Vec3 cubePositions[]{
+        Vec3(0.0f, 0.0f, 0.0f),
+        // Vec3(2.0f, 5.0f, -15.0f),
+        // Vec3(-1.5f, -2.2f, -2.5f),
+        // Vec3(-3.8f, -2.0f, -12.3f),
+        // Vec3(2.4f, -0.4f, -3.5f),
+        // Vec3(-1.7f, 3.0f, -7.5f),
+        // Vec3(1.3f, -2.0f, -2.5f),
+        // Vec3(1.5f, 2.0f, -2.5f),
+        // Vec3(1.5f, 0.2f, -1.5f),
+        // Vec3(-1.3f, 1.0f, -1.5f),
     };
     Rotation cubeRotations[]{
-        {v3(0, 1, 0), glm::radians((float)30)},
-        {v3(1, 1, 1), glm::radians((float)24)},
-        {v3(0, 1, 1), glm::radians((float)30)},
-        {v3(1, 1, 0), glm::radians((float)60)},
-        {v3(1, 1, 0), glm::radians((float)60)},
-        {v3(0, 1, 1), glm::radians((float)30)},
-        {v3(1, 1, 1), glm::radians((float)24)},
-        {v3(0, 1, 1), glm::radians((float)30)},
-        {v3(0, 1, 1), glm::radians((float)30)},
-        {v3(1, 0, 1), glm::radians((float)10)},
+        {Vec3(0, 1, 0), glm::radians((float)30)},
+        {Vec3(1, 1, 1), glm::radians((float)24)},
+        {Vec3(0, 1, 1), glm::radians((float)30)},
+        {Vec3(1, 1, 0), glm::radians((float)60)},
+        {Vec3(1, 1, 0), glm::radians((float)60)},
+        {Vec3(0, 1, 1), glm::radians((float)30)},
+        {Vec3(1, 1, 1), glm::radians((float)24)},
+        {Vec3(0, 1, 1), glm::radians((float)30)},
+        {Vec3(0, 1, 1), glm::radians((float)30)},
+        {Vec3(1, 0, 1), glm::radians((float)10)},
     };
     const i32 cubeCount = arrayCount(cubePositions);
     Mesh cubeMeshArray[cubeCount];
@@ -367,20 +355,20 @@ main(i32 argc, char **argv) {
         cubeMeshArray[i].shaderProgram = basicShader;
     }
 
-        // glUseProgram(basicShader);
-        // glUniform1i(glGetUniformLocation(basicShader, "inTexture0"), 0);
-        // glUniform1i(glGetUniformLocation(basicShader, "inTexture1"), 1);
+    // glUseProgram(basicShader);
+    // glUniform1i(glGetUniformLocation(basicShader, "inTexture0"), 0);
+    // glUniform1i(glGetUniformLocation(basicShader, "inTexture1"), 1);
 #endif
     //END cubes
 
-    v3 lightPos = v3(1.2f, 1.0f, 2.0f);
-    v3 viewPos  = v3(0.0f, 2.0f, 3.0f);
+    Vec3 lightPos = Vec3(1.2f, 1.0f, 2.0f);
+    Vec3 viewPos  = Vec3(0.0f, 2.0f, 3.0f);
 
     glUseProgram(basicShader);
     setUniform3f(basicShader, "objectColor", 1.0f, 0.5f, 0.31f);
     setUniform3f(basicShader, "lightColor", 1.0f, 1.0f, 1.0f);
-    setUniformV3(basicShader, "lightPos", lightPos);
-    setUniformV3(basicShader, "viewPos", viewPos);
+    setUniformVec3(basicShader, "lightPos", lightPos);
+    setUniformVec3(basicShader, "viewPos", viewPos);
 
     b32 running     = true;
     f64 currentTime = (f32)SDL_GetPerformanceCounter() /
@@ -437,36 +425,36 @@ main(i32 argc, char **argv) {
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        m4 projection = glm::perspective(glm::radians(45.0f),
+        Mat4 projection = glm::perspective(glm::radians(45.0f),
                                          (f32)SCREEN_WIDTH / (f32)SCREEN_HEIGHT, 0.1f, 100.0f);
 
-        // m4 view = glm::lookAt(
+        // Mat4 view = glm::lookAt(
         // 	fp.position,
         // 	fp.position + fp.direction,
-        // 	v3(0,1,0)
+        // 	Vec3(0,1,0)
         // );
 
-        m4 view = glm::lookAt(
+        Mat4 view = glm::lookAt(
             viewPos,
-            v3(0, 0, 0),
-            v3(0, 1, 0));
+            Vec3(0, 0, 0),
+            Vec3(0, 1, 0));
 
 // Draw quads
 #if 0
         for (i32 i = 0; i < quadCount; i++)
         {
-            v3 scale = quadScales[i];
-            v3 position = quadPositions[i];
+            Vec3 scale = quadScales[i];
+            Vec3 position = quadPositions[i];
             Mesh mesh = quadMeshArray[i];
             Rotation rotation = quadRotations[i];
 
-            m4 m = m4(1.0f);
-            m4 translate = glm::translate(m, position);
-            m4 rotate = glm::rotate(m, rotation.angle, rotation.axis);
-            rotate = glm::rotate(rotate, glm::radians(10.f), v3(1, 0, 0));
-            m4 scaleM = glm::scale(m, scale);
-            m4 model = scaleM * translate * rotate;
-            m4 mvp = projection * view * model;
+            Mat4 m = Mat4(1.0f);
+            Mat4 translate = glm::translate(m, position);
+            Mat4 rotate = glm::rotate(m, rotation.angle, rotation.axis);
+            rotate = glm::rotate(rotate, glm::radians(10.f), Vec3(1, 0, 0));
+            Mat4 scaleM = glm::scale(m, scale);
+            Mat4 model = scaleM * translate * rotate;
+            Mat4 mvp = projection * view * model;
 
             u32 mvpHandle = glGetUniformLocation(mesh.shaderProgram, "MVP");
             glUniformMatrix4fv(mvpHandle, 1, GL_FALSE, glm::value_ptr(mvp));
@@ -502,15 +490,15 @@ main(i32 argc, char **argv) {
 // Draw light source
 #if 1
         {
-            m4 model = m4(1.0f);
+            Mat4 model = Mat4(1.0f);
             model    = glm::translate(model, lightPos);
-            model    = glm::scale(model, v3(0.3f));
+            model    = glm::scale(model, Vec3(0.3f));
 
             glUseProgram(lightShader);
 
-            setUniformM4(lightShader, "model", model);
-            setUniformM4(lightShader, "view", view);
-            setUniformM4(lightShader, "projection", projection);
+            setUniformMat4(lightShader, "model", model);
+            setUniformMat4(lightShader, "view", view);
+            setUniformMat4(lightShader, "projection", projection);
 
             glBindVertexArray(lightVertexArray);
             glDrawArrays(GL_TRIANGLES, 0, cubeTriangleCount);
@@ -520,23 +508,23 @@ main(i32 argc, char **argv) {
 // Draw cubes
 #if 1
         for(i32 i = 0; i < cubeCount; i++) {
-            // v3 scale = cubeScales[i];
-            v3 scale          = v3(1.0f);
-            v3 position       = cubePositions[i];
+            // Vec3 scale = cubeScales[i];
+            Vec3 scale        = Vec3(1.0f);
+            Vec3 position     = cubePositions[i];
             Mesh mesh         = cubeMeshArray[i];
             Rotation rotation = cubeRotations[i];
 
-            m4 model = m4(1.0f);
+            Mat4 model = Mat4(1.0f);
             model    = glm::translate(model, position);
             model    = glm::rotate(model, rotation.angle, rotation.axis);
             model    = glm::scale(model, scale);
-            // m4 mvp       = projection * view * model;
+            // Mat4 mvp       = projection * view * model;
 
             glUseProgram(mesh.shaderProgram);
 
-            setUniformM4(mesh.shaderProgram, "model", model);
-            setUniformM4(mesh.shaderProgram, "view", view);
-            setUniformM4(mesh.shaderProgram, "projection", projection);
+            setUniformMat4(mesh.shaderProgram, "model", model);
+            setUniformMat4(mesh.shaderProgram, "view", view);
+            setUniformMat4(mesh.shaderProgram, "projection", projection);
 
             // glActiveTexture(GL_TEXTURE0);
             // glBindTexture(GL_TEXTURE_2D, texture0);
