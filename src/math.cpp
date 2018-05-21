@@ -1,9 +1,16 @@
 static inline f32
-clamp(f32 value, f32 min, f32 max) {
-    if(value < min)
-        value = min;
-    if(value > max)
-        value = max;
+min(f32 a, f32 b) {
+    return a < b ? a : b;
+}
+
+static inline f32
+max(f32 a, f32 b) {
+    return a > b ? a : b;
+}
+
+static inline f32
+clamp(f32 value, f32 _min, f32 _max) {
+    f32 result = min(_max, max(value, _min));
     return value;
 }
 

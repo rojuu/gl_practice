@@ -12,6 +12,7 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include <cstdint>
+#include <stdarg.h>
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
@@ -27,6 +28,17 @@ static const f32 PI = glm::pi<f32>();
 
 #define SCREEN_WIDTH 1024
 #define SCREEN_HEIGHT 768
+
+static void
+debugLog(const char* format, ...) {
+    char buffer[1024];
+    va_list args;
+    va_start(args, format);
+    vsprintf(buffer,format, args);
+    SDL_Log(buffer);
+    va_end(args);
+}
+
 
 static u32
 compileShader(const char *vertexShaderCode, const char *fragmentShaderCode) {
@@ -46,7 +58,7 @@ compileShader(const char *vertexShaderCode, const char *fragmentShaderCode) {
     if(infoLogLength > 0) {
         std::vector<char> vertexShaderErrorMessage(infoLogLength + 1);
         glGetShaderInfoLog(vertexShaderID, infoLogLength, NULL, &vertexShaderErrorMessage[0]);
-        printf("%s\n", &vertexShaderErrorMessage[0]);
+        debugLog("%s\n", &vertexShaderErrorMessage[0]);
     }
 
     // Compile Fragment Shader
@@ -59,7 +71,7 @@ compileShader(const char *vertexShaderCode, const char *fragmentShaderCode) {
     if(infoLogLength > 0) {
         std::vector<char> fragmentShaderErrorMessage(infoLogLength + 1);
         glGetShaderInfoLog(fragmentShaderID, infoLogLength, NULL, &fragmentShaderErrorMessage[0]);
-        printf("%s\n", &fragmentShaderErrorMessage[0]);
+        debugLog("%s\n", &fragmentShaderErrorMessage[0]);
     }
 
     // Link the program
@@ -74,7 +86,7 @@ compileShader(const char *vertexShaderCode, const char *fragmentShaderCode) {
     if(infoLogLength > 0) {
         std::vector<char> programErrorMessage(infoLogLength + 1);
         glGetProgramInfoLog(programID, infoLogLength, NULL, &programErrorMessage[0]);
-        printf("%s\n", &programErrorMessage[0]);
+        debugLog("%s\n", &programErrorMessage[0]);
     }
 
     glDetachShader(programID, vertexShaderID);
@@ -102,7 +114,7 @@ loadTexture(const char *filename, bool flipVerticallyOnLoad, GLint internalForma
         glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
     } else {
-        printf("Failed to load texture\n");
+        debugLog("Failed to load texture\n");
         return 0;
     }
     stbi_image_free(data);
@@ -110,19 +122,17 @@ loadTexture(const char *filename, bool flipVerticallyOnLoad, GLint internalForma
 }
 
 static inline u32
-loadTextureJPG(const char *filename, bool flipVerticallyOnLoad) {
+loadTextureRGB(const char *filename, bool flipVerticallyOnLoad) {
     u32 texture = loadTexture(filename, flipVerticallyOnLoad, GL_RGB, GL_RGB);
     return texture;
 }
 
 static inline u32
-loadTexturePNG(const char *filename, bool flipVerticallyOnLoad) {
+loadTextureRBGA(const char *filename, bool flipVerticallyOnLoad) {
     u32 texture = loadTexture(filename, flipVerticallyOnLoad, GL_RGBA, GL_RGBA);
     return texture;
 }
 
-//TODO: Should these set uniform functions do glUseProgram every time?
-// I got confused, because I wasn't doing that before using these functions.
 static void
 setUniformMat4(u32 shader, const char *name, Mat4 matrix) {
     u32 handle = glGetUniformLocation(shader, name);
@@ -144,7 +154,7 @@ i32
 main(i32 argc, char **argv) {
     // Init SDL stuff
     if(SDL_Init(SDL_INIT_VIDEO) < 0) {
-        printf("SDL_Error: %s\n", SDL_GetError());
+        debugLog("SDL_Error: %s\n", SDL_GetError());
         return -1;
     }
     atexit(SDL_Quit);
@@ -157,7 +167,7 @@ main(i32 argc, char **argv) {
         SDL_WINDOW_OPENGL);
 
     if(!window) {
-        printf("SDL_Error: %s\n", SDL_GetError());
+        debugLog("SDL_Error: %s\n", SDL_GetError());
         return -1;
     }
 
@@ -188,17 +198,17 @@ main(i32 argc, char **argv) {
     u32 lightShader = compileShader(basic_vertex_shader, light_fragment_shader);
     if(!basicShader ||
        !lightShader) {
-        printf("Error loading shaders.\n");
+        debugLog("Error loading shaders.\n");
         return -1;
     }
 
 //Load textures
 #if 0
-    u32 texture0 = loadTextureJPG("data/textures/container.jpg", true);
-    u32 texture1 = loadTexturePNG("data/textures/awesomeface.png", true);
+    u32 texture0 = loadTextureRGB("data/textures/container.jpg", true);
+    u32 texture1 = loadTextureRGBA("data/textures/awesomeface.png", true);
     if(!texture0 ||
        !texture1) {
-        printf("Error loading textures.\n");
+        debugLog("Error loading textures.\n");
         return -1;
     }
 #endif
@@ -273,15 +283,15 @@ main(i32 argc, char **argv) {
 #if 1
     Vec3 cubePositions[]{
         Vec3(0.0f, 0.0f, 0.0f),
-        // Vec3(2.0f, 5.0f, -15.0f),
-        // Vec3(-1.5f, -2.2f, -2.5f),
-        // Vec3(-3.8f, -2.0f, -12.3f),
-        // Vec3(2.4f, -0.4f, -3.5f),
-        // Vec3(-1.7f, 3.0f, -7.5f),
-        // Vec3(1.3f, -2.0f, -2.5f),
-        // Vec3(1.5f, 2.0f, -2.5f),
-        // Vec3(1.5f, 0.2f, -1.5f),
-        // Vec3(-1.3f, 1.0f, -1.5f),
+        Vec3(2.0f, 5.0f, -15.0f),
+        Vec3(-1.5f, -2.2f, -2.5f),
+        Vec3(-3.8f, -2.0f, -12.3f),
+        Vec3(2.4f, -0.4f, -3.5f),
+        Vec3(-1.7f, 3.0f, -7.5f),
+        Vec3(1.3f, -2.0f, -2.5f),
+        Vec3(1.5f, 2.0f, -2.5f),
+        Vec3(1.5f, 0.2f, -1.5f),
+        Vec3(-1.3f, 1.0f, -1.5f),
     };
     Rotation cubeRotations[]{
         {Vec3(0, 1, 0), glm::radians((float)30)},
@@ -362,7 +372,7 @@ main(i32 argc, char **argv) {
     //END cubes
 
     Vec3 lightPos = Vec3(1.2f, 1.0f, 2.0f);
-    Vec3 viewPos  = Vec3(0.0f, 2.0f, 3.0f);
+    Vec3 viewPos = Vec3(0.0f, 2.0f, 3.0f);
 
     glUseProgram(basicShader);
     setUniform3f(basicShader, "objectColor", 1.0f, 0.5f, 0.31f);
@@ -370,16 +380,16 @@ main(i32 argc, char **argv) {
     setUniformVec3(basicShader, "lightPos", lightPos);
     setUniformVec3(basicShader, "viewPos", viewPos);
 
-    b32 running     = true;
+    b32 running = true;
     f64 currentTime = (f32)SDL_GetPerformanceCounter() /
                       (f32)SDL_GetPerformanceFrequency();
-    f64 lastTime       = 0;
-    f64 deltaTime      = 0;
-    i32 frameCounter   = 0;
+    f64 lastTime = 0;
+    f64 deltaTime = 0;
+    i32 frameCounter = 0;
     i32 lastFrameCount = 0;
-    f64 lastFpsTime    = 0;
+    f64 lastFpsTime = 0;
     while(running) {
-        lastTime    = currentTime;
+        lastTime = currentTime;
         currentTime = (f64)SDL_GetPerformanceCounter() /
                       (f64)SDL_GetPerformanceFrequency();
         deltaTime = (f64)(currentTime - lastTime);
@@ -398,25 +408,25 @@ main(i32 argc, char **argv) {
         SDL_Event event;
         while(SDL_PollEvent(&event)) {
             switch(event.type) {
-            case SDL_QUIT: {
-                running = false;
-            } break;
-
-            case SDL_KEYDOWN: {
-                switch(event.key.keysym.sym) {
-                case SDLK_ESCAPE: {
+                case SDL_QUIT: {
                     running = false;
                 } break;
 
-                case '1': {
-                    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-                } break;
+                case SDL_KEYDOWN: {
+                    switch(event.key.keysym.sym) {
+                        case SDLK_ESCAPE: {
+                            running = false;
+                        } break;
 
-                case '2': {
-                    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                        case '1': {
+                            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                        } break;
+
+                        case '2': {
+                            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                        } break;
+                    }
                 } break;
-                }
-            } break;
             }
         }
 
@@ -429,20 +439,20 @@ main(i32 argc, char **argv) {
                                          (f32)SCREEN_WIDTH / (f32)SCREEN_HEIGHT, 0.1f, 100.0f);
 
         // Mat4 view = glm::lookAt(
-        // 	fp.position,
-        // 	fp.position + fp.direction,
-        // 	Vec3(0,1,0)
+        //     fp.position,
+        //     fp.position + fp.direction,
+        //     Vec3(0,1,0)
         // );
 
         Mat4 view = glm::lookAt(
             viewPos,
             Vec3(0, 0, 0),
-            Vec3(0, 1, 0));
+            Vec3(0, 1, 0)
+        );
 
 // Draw quads
 #if 0
-        for (i32 i = 0; i < quadCount; i++)
-        {
+        for(i32 i = 0; i < quadCount; i++) {
             Vec3 scale = quadScales[i];
             Vec3 position = quadPositions[i];
             Mesh mesh = quadMeshArray[i];
@@ -476,23 +486,23 @@ main(i32 argc, char **argv) {
             cubeRotations[i].angle = fmod(cubeRotations[i].angle + rotationAmount, (PI * 2));
         }
 
-            // for(i32 i = 1; i < cubeCount; i += 3) {
-            //     float rotationAmount   = -deltaTime;
-            //     cubeRotations[i].angle = fmod(cubeRotations[i].angle + rotationAmount, (PI * 2));
-            // }
+        // for(i32 i = 1; i < cubeCount; i += 3) {
+        //     float rotationAmount   = -deltaTime;
+        //     cubeRotations[i].angle = fmod(cubeRotations[i].angle + rotationAmount, (PI * 2));
+        // }
 
-            // for(i32 i = 2; i < cubeCount; i += 3) {
-            //     float rotationAmount   = 0.5f * deltaTime;
-            //     cubeRotations[i].angle = fmod(cubeRotations[i].angle + rotationAmount, (PI * 2));
-            // }
+        // for(i32 i = 2; i < cubeCount; i += 3) {
+        //     float rotationAmount   = 0.5f * deltaTime;
+        //     cubeRotations[i].angle = fmod(cubeRotations[i].angle + rotationAmount, (PI * 2));
+        // }
 #endif
 
 // Draw light source
 #if 1
         {
             Mat4 model = Mat4(1.0f);
-            model    = glm::translate(model, lightPos);
-            model    = glm::scale(model, Vec3(0.3f));
+            model = glm::translate(model, lightPos);
+            model = glm::scale(model, Vec3(0.3f));
 
             glUseProgram(lightShader);
 
@@ -509,16 +519,16 @@ main(i32 argc, char **argv) {
 #if 1
         for(i32 i = 0; i < cubeCount; i++) {
             // Vec3 scale = cubeScales[i];
-            Vec3 scale        = Vec3(1.0f);
-            Vec3 position     = cubePositions[i];
-            Mesh mesh         = cubeMeshArray[i];
+            Vec3 scale = Vec3(1.0f);
+            Vec3 position = cubePositions[i];
+            Mesh mesh = cubeMeshArray[i];
             Rotation rotation = cubeRotations[i];
 
             Mat4 model = Mat4(1.0f);
-            model    = glm::translate(model, position);
-            model    = glm::rotate(model, rotation.angle, rotation.axis);
-            model    = glm::scale(model, scale);
-            // Mat4 mvp       = projection * view * model;
+            model = glm::translate(model, position);
+            model = glm::rotate(model, rotation.angle, rotation.axis);
+            model = glm::scale(model, scale);
+            // Mat4 mvp = projection * view * model;
 
             glUseProgram(mesh.shaderProgram);
 
