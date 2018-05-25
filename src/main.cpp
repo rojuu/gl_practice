@@ -151,20 +151,26 @@ loadTextureRBGA(const char *filename, bool flipVerticallyOnLoad) {
 }
 
 static void
-setUniformMat4(u32 shader, const char *name, Mat4 matrix) {
+setUniformMat4(const char *name, Mat4 matrix) {
+    i32 shader;
+    glGetIntegerv(GL_CURRENT_PROGRAM, &shader);
+
     u32 handle = glGetUniformLocation(shader, name);
     glUniformMatrix4fv(handle, 1, GL_FALSE, glm::value_ptr(matrix));
 }
 
 static void
-setUniform3f(u32 shader, const char *name, f32 f1, f32 f2, f32 f3) {
+setUniform3f(const char *name, f32 f1, f32 f2, f32 f3) {
+    i32 shader;
+    glGetIntegerv(GL_CURRENT_PROGRAM, &shader);
+
     u32 handle = glGetUniformLocation(shader, name);
     glUniform3f(handle, f1, f2, f3);
 }
 
 static void
-setUniformVec3(u32 shader, const char *name, Vec3 v) {
-    setUniform3f(shader, name, v.x, v.y, v.z);
+setUniformVec3(const char *name, Vec3 v) {
+    setUniform3f(name, v.x, v.y, v.z);
 }
 
 i32
@@ -392,10 +398,10 @@ main(i32 argc, char **argv) {
     Vec3 viewPos = Vec3(0.0f, 2.0f, 3.0f);
 
     glUseProgram(basicShader);
-    setUniform3f(basicShader, "objectColor", 1.0f, 0.5f, 0.31f);
-    setUniform3f(basicShader, "lightColor", 1.0f, 1.0f, 1.0f);
-    setUniformVec3(basicShader, "lightPos", lightPos);
-    setUniformVec3(basicShader, "viewPos", viewPos);
+    setUniform3f("objectColor", 1.0f, 0.5f, 0.31f);
+    setUniform3f("lightColor", 1.0f, 1.0f, 1.0f);
+    setUniformVec3("lightPos", lightPos);
+    setUniformVec3("viewPos", viewPos);
 
     b32 running = true;
     f64 currentTime = (f32)SDL_GetPerformanceCounter() /
@@ -523,9 +529,9 @@ main(i32 argc, char **argv) {
 
             glUseProgram(lightShader);
 
-            setUniformMat4(lightShader, "model", model);
-            setUniformMat4(lightShader, "view", view);
-            setUniformMat4(lightShader, "projection", projection);
+            setUniformMat4("model", model);
+            setUniformMat4("view", view);
+            setUniformMat4("projection", projection);
 
             glBindVertexArray(lightVertexArray);
             glDrawArrays(GL_TRIANGLES, 0, cubeTriangleCount);
@@ -549,9 +555,9 @@ main(i32 argc, char **argv) {
 
             glUseProgram(mesh.shaderProgram);
 
-            setUniformMat4(mesh.shaderProgram, "model", model);
-            setUniformMat4(mesh.shaderProgram, "view", view);
-            setUniformMat4(mesh.shaderProgram, "projection", projection);
+            setUniformMat4("model", model);
+            setUniformMat4("view", view);
+            setUniformMat4("projection", projection);
 
             // glActiveTexture(GL_TEXTURE0);
             // glBindTexture(GL_TEXTURE_2D, texture0);
