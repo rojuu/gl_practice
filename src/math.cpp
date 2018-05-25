@@ -1,3 +1,8 @@
+/*
+  TODO:
+    - Should we have wrappers for all the glm math functions?
+*/
+
 static inline f32
 min(f32 a, f32 b) {
     return a < b ? a : b;

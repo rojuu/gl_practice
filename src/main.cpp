@@ -26,19 +26,36 @@
 
 static const f32 PI = glm::pi<f32>();
 
+//TODO: have resolution change during runtime?
+// Like have resizeable window etc.
 #define SCREEN_WIDTH 1024
 #define SCREEN_HEIGHT 768
 
 static void
 debugLog(const char* format, ...) {
+    //TODO: Figure out the right length for this buffer.
+    // 1024 might be a bit overkill, but this doesn't need
+    // to be too fast anyways probably.
     char buffer[1024];
     va_list args;
     va_start(args, format);
-    vsprintf(buffer,format, args);
+    vsprintf(buffer, format, args);
     SDL_Log(buffer);
     va_end(args);
 }
 
+inline void
+_assert(const char* expression, const char* file, int line)
+{
+    debugLog("Assertion '%s' failed, file '%s' line '%d'.", expression, file, line);
+    abort();
+}
+#undef assert
+#ifdef NDEBUG
+#define assert(EXPRESSION) ((void)0)
+#else
+#define assert(EXPRESSION) ((EXPRESSION) ? (void)0 : _assert(#EXPRESSION, __FILE__, __LINE__))
+#endif
 
 static u32
 compileShader(const char *vertexShaderCode, const char *fragmentShaderCode) {
