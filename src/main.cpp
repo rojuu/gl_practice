@@ -31,8 +31,24 @@ static const f32 PI = glm::pi<f32>();
 #define SCREEN_WIDTH 1024
 #define SCREEN_HEIGHT 768
 
+
 static void
-debugLog(const char* format, ...) {
+logDebugMessage(const char* format, ...) {
+#ifndef NDEBUG
+    //TODO: Figure out the right length for this buffer.
+    // 1024 might be a bit overkill, but this doesn't need
+    // to be too fast anyways probably.
+    char buffer[1024];
+    va_list args;
+    va_start(args, format);
+    vsprintf(buffer, format, args);
+    SDL_Log(buffer);
+    va_end(args);
+#endif
+}
+
+static void
+logErrorMessage(const char* format, ...) {
     //TODO: Figure out the right length for this buffer.
     // 1024 might be a bit overkill, but this doesn't need
     // to be too fast anyways probably.
@@ -44,6 +60,9 @@ debugLog(const char* format, ...) {
     va_end(args);
 }
 
+#if 1
+#include <assert.h>
+#else
 inline void
 _assert(const char* expression, const char* file, int line)
 {
@@ -55,6 +74,7 @@ _assert(const char* expression, const char* file, int line)
 #define assert(EXPRESSION) ((void)0)
 #else
 #define assert(EXPRESSION) ((EXPRESSION) ? (void)0 : _assert(#EXPRESSION, __FILE__, __LINE__))
+#endif
 #endif
 
 static u32
@@ -75,7 +95,7 @@ compileShader(const char *vertexShaderCode, const char *fragmentShaderCode) {
     if(infoLogLength > 0) {
         std::vector<char> vertexShaderErrorMessage(infoLogLength + 1);
         glGetShaderInfoLog(vertexShaderID, infoLogLength, NULL, &vertexShaderErrorMessage[0]);
-        debugLog("%s\n", &vertexShaderErrorMessage[0]);
+        logErrorMessage("%s\n", &vertexShaderErrorMessage[0]);
     }
 
     // Compile Fragment Shader
@@ -88,7 +108,7 @@ compileShader(const char *vertexShaderCode, const char *fragmentShaderCode) {
     if(infoLogLength > 0) {
         std::vector<char> fragmentShaderErrorMessage(infoLogLength + 1);
         glGetShaderInfoLog(fragmentShaderID, infoLogLength, NULL, &fragmentShaderErrorMessage[0]);
-        debugLog("%s\n", &fragmentShaderErrorMessage[0]);
+        logErrorMessage("%s\n", &fragmentShaderErrorMessage[0]);
     }
 
     // Link the program
@@ -103,7 +123,7 @@ compileShader(const char *vertexShaderCode, const char *fragmentShaderCode) {
     if(infoLogLength > 0) {
         std::vector<char> programErrorMessage(infoLogLength + 1);
         glGetProgramInfoLog(programID, infoLogLength, NULL, &programErrorMessage[0]);
-        debugLog("%s\n", &programErrorMessage[0]);
+        logErrorMessage("%s\n", &programErrorMessage[0]);
     }
 
     glDetachShader(programID, vertexShaderID);
@@ -131,7 +151,7 @@ loadTexture(const char *filename, bool flipVerticallyOnLoad, GLint internalForma
         glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
     } else {
-        debugLog("Failed to load texture\n");
+        logErrorMessage("Failed to load texture\n");
         return 0;
     }
     stbi_image_free(data);
@@ -177,7 +197,7 @@ i32
 main(i32 argc, char **argv) {
     // Init SDL stuff
     if(SDL_Init(SDL_INIT_VIDEO) < 0) {
-        debugLog("SDL_Error: %s\n", SDL_GetError());
+        logErrorMessage("SDL_Error: %s\n", SDL_GetError());
         return -1;
     }
     atexit(SDL_Quit);
@@ -190,7 +210,7 @@ main(i32 argc, char **argv) {
         SDL_WINDOW_OPENGL);
 
     if(!window) {
-        debugLog("SDL_Error: %s\n", SDL_GetError());
+        logErrorMessage("SDL_Error: %s\n", SDL_GetError());
         return -1;
     }
 
@@ -221,7 +241,7 @@ main(i32 argc, char **argv) {
     u32 lightShader = compileShader(basic_vertex_shader, light_fragment_shader);
     if(!basicShader ||
        !lightShader) {
-        debugLog("Error loading shaders.\n");
+        logErrorMessage("Error loading shaders.\n");
         return -1;
     }
 
