@@ -24,20 +24,22 @@
 #include "shaders.h"
 #include "objects.h"
 
+#include <assert.h>
+
 static const f32 PI = glm::pi<f32>();
 
-//TODO: have resolution change during runtime?
-// Like have resizeable window etc.
-#define SCREEN_WIDTH 1024
-#define SCREEN_HEIGHT 768
+struct RenderContext {
+    SDL_Window* window;
+    SDL_GLContext glContext;
+    u32 width;
+    u32 height;
+};
 
-
+//TODO: Figure out the right length for the buffers in these
+// log message functions. 1024 might be a bit of an overkill.s
 static void
 logDebugMessage(const char* format, ...) {
 #ifndef NDEBUG
-    //TODO: Figure out the right length for this buffer.
-    // 1024 might be a bit overkill, but this doesn't need
-    // to be too fast anyways probably.
     char buffer[1024];
     va_list args;
     va_start(args, format);
@@ -49,9 +51,6 @@ logDebugMessage(const char* format, ...) {
 
 static void
 logErrorMessage(const char* format, ...) {
-    //TODO: Figure out the right length for this buffer.
-    // 1024 might be a bit overkill, but this doesn't need
-    // to be too fast anyways probably.
     char buffer[1024];
     va_list args;
     va_start(args, format);
@@ -59,23 +58,6 @@ logErrorMessage(const char* format, ...) {
     SDL_Log(buffer);
     va_end(args);
 }
-
-#if 1
-#include <assert.h>
-#else
-inline void
-_assert(const char* expression, const char* file, int line)
-{
-    debugLog("Assertion '%s' failed, file '%s' line '%d'.", expression, file, line);
-    abort();
-}
-#undef assert
-#ifdef NDEBUG
-#define assert(EXPRESSION) ((void)0)
-#else
-#define assert(EXPRESSION) ((EXPRESSION) ? (void)0 : _assert(#EXPRESSION, __FILE__, __LINE__))
-#endif
-#endif
 
 static u32
 compileShader(const char *vertexShaderCode, const char *fragmentShaderCode) {
@@ -193,6 +175,20 @@ setUniformVec3(const char *name, Vec3 v) {
     setUniform3f(name, v.x, v.y, v.z);
 }
 
+static void
+setUnfirorm1i(const char* name, i32 val) {
+    i32 shader;
+    glGetIntegerv(GL_CURRENT_PROGRAM, &shader);
+    glUniform1i(glGetUniformLocation(shader, name), val);
+}
+
+static void
+resizeWindow(RenderContext* renderContext, u32 width, u32 height) {
+    renderContext->width = width;
+    renderContext->height = height;
+    glViewport(0, 0, width, height);
+}
+
 i32
 main(i32 argc, char **argv) {
     // Init SDL stuff
@@ -202,19 +198,23 @@ main(i32 argc, char **argv) {
     }
     atexit(SDL_Quit);
 
+    RenderContext renderContext;
+    renderContext.width = 512;
+    renderContext.height = 512;
+
     SDL_Window *window = SDL_CreateWindow(
         "GL_TEST",
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
-        SCREEN_WIDTH, SCREEN_HEIGHT,
-        SDL_WINDOW_OPENGL);
+        renderContext.width, renderContext.height,
+        SDL_WINDOW_OPENGL|SDL_WINDOW_SHOWN|SDL_WINDOW_RESIZABLE);
 
     if(!window) {
         logErrorMessage("SDL_Error: %s\n", SDL_GetError());
         return -1;
     }
 
-    SDL_SetRelativeMouseMode(SDL_TRUE);
+    // SDL_SetRelativeMouseMode(SDL_TRUE);
 
     // Init OpenGL
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
@@ -224,7 +224,10 @@ main(i32 argc, char **argv) {
 
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-    SDL_GLContext context = SDL_GL_CreateContext(window);
+    SDL_GLContext glContext = SDL_GL_CreateContext(window);
+
+    renderContext.glContext = glContext;
+    renderContext.window = window;
 
     SDL_GL_SetSwapInterval(0);
 
@@ -246,7 +249,8 @@ main(i32 argc, char **argv) {
     }
 
 //Load textures
-#if 0
+#define USE_TEXTURES 0
+#if USE_TEXTURES
     u32 texture0 = loadTextureRGB("data/textures/container.jpg", true);
     u32 texture1 = loadTextureRGBA("data/textures/awesomeface.png", true);
     if(!texture0 ||
@@ -256,74 +260,6 @@ main(i32 argc, char **argv) {
     }
 #endif
 
-//Quads
-#if 0
-    Vec3 quadPositions[]{
-        Vec3(0, 0, 0),
-        Vec3(1, 0, 0),
-        Vec3(0, 1, 0),
-        Vec3(0, 0, 0),
-    };
-    Rotation quadRotations[]{
-        {Vec3(0, 0, 1), glm::radians((float)0)},
-        {Vec3(0, 0, 1), glm::radians((float)0)},
-        {Vec3(0, 0, 1), glm::radians((float)30)},
-        {Vec3(0, 0, 1), glm::radians((float)60)},
-    };
-    Vec3 quadScales[]{
-        Vec3(1.0f, 1.0f, 1.0f),
-        Vec3(0.1f, 0.1f, 1.0f),
-        Vec3(0.5f, 0.5f, 1.0f),
-        Vec3(2.5f, 0.4f, 1.0f),
-    };
-
-    const i32 quadCount = 1;
-    // const i32 quadCount = arrayCount(quadPositions);
-    Mesh quadMeshArray[quadCount];
-
-    u32 quadVertexArray;
-    glGenVertexArrays(1, &quadVertexArray);
-
-    u32 quadElementBuffer;
-    glGenBuffers(1, &quadElementBuffer);
-
-    u32 quadVertexBuffer;
-    glGenBuffers(1, &quadVertexBuffer);
-    u32 quadColorBuffer;
-    glGenBuffers(1, &quadColorBuffer);
-    u32 quadTexCoordBuffer;
-    glGenBuffers(1, &quadTexCoordBuffer);
-
-    glBindVertexArray(quadVertexArray);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, quadElementBuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(quadIndices), quadIndices, GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ARRAY_BUFFER, quadVertexBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertexPositions), quadVertexPositions, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-    glEnableVertexAttribArray(0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, quadColorBuffer);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertexColors), quadVertexColors, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(1);
-
-    glBindBuffer(GL_ARRAY_BUFFER, quadTexCoordBuffer);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, 0);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quadTexCoords), quadTexCoords, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(2);
-
-    for(i32 i = 0; i < quadCount; i++) {
-        quadMeshArray[i].vao           = quadVertexArray;
-        quadMeshArray[i].count         = arrayCount(quadIndices);
-        quadMeshArray[i].shaderProgram = basicShader;
-    }
-    //END Quads
-#endif
-
-//Cubes
-#if 1
     Vec3 cubePositions[]{
         Vec3(0.0f, 0.0f, 0.0f),
         Vec3(2.0f, 5.0f, -15.0f),
@@ -408,11 +344,13 @@ main(i32 argc, char **argv) {
         cubeMeshArray[i].shaderProgram = basicShader;
     }
 
-    // glUseProgram(basicShader);
+#if USE_TEXTURES
+    glUseProgram(basicShader);
+    setUnfirorm1i("inTexture0", 0);
+    setUnfirorm1i("inTexture1", 1);
     // glUniform1i(glGetUniformLocation(basicShader, "inTexture0"), 0);
     // glUniform1i(glGetUniformLocation(basicShader, "inTexture1"), 1);
 #endif
-    //END cubes
 
     Vec3 lightPos = Vec3(1.2f, 1.0f, 2.0f);
     Vec3 viewPos = Vec3(0.0f, 2.0f, 3.0f);
@@ -455,6 +393,14 @@ main(i32 argc, char **argv) {
                     running = false;
                 } break;
 
+                case SDL_WINDOWEVENT: {
+                    switch(event.window.event) {
+                        case SDL_WINDOWEVENT_SIZE_CHANGED: {
+                            resizeWindow(&renderContext, event.window.data1, event.window.data2);
+                        } break;
+                    }
+                } break;
+
                 case SDL_KEYDOWN: {
                     switch(event.key.keysym.sym) {
                         case SDLK_ESCAPE: {
@@ -473,54 +419,18 @@ main(i32 argc, char **argv) {
             }
         }
 
-        // glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         Mat4 projection = glm::perspective(glm::radians(45.0f),
-                                         (f32)SCREEN_WIDTH / (f32)SCREEN_HEIGHT, 0.1f, 100.0f);
-
-        // Mat4 view = glm::lookAt(
-        //     fp.position,
-        //     fp.position + fp.direction,
-        //     Vec3(0,1,0)
-        // );
+                                         (f32)renderContext.width / (f32)renderContext.height, 0.1f, 100.0f);
 
         Mat4 view = glm::lookAt(
             viewPos,
             Vec3(0, 0, 0),
             Vec3(0, 1, 0)
         );
-
-// Draw quads
-#if 0
-        for(i32 i = 0; i < quadCount; i++) {
-            Vec3 scale = quadScales[i];
-            Vec3 position = quadPositions[i];
-            Mesh mesh = quadMeshArray[i];
-            Rotation rotation = quadRotations[i];
-
-            Mat4 m = Mat4(1.0f);
-            Mat4 translate = glm::translate(m, position);
-            Mat4 rotate = glm::rotate(m, rotation.angle, rotation.axis);
-            rotate = glm::rotate(rotate, glm::radians(10.f), Vec3(1, 0, 0));
-            Mat4 scaleM = glm::scale(m, scale);
-            Mat4 model = scaleM * translate * rotate;
-            Mat4 mvp = projection * view * model;
-
-            u32 mvpHandle = glGetUniformLocation(mesh.shaderProgram, "MVP");
-            glUniformMatrix4fv(mvpHandle, 1, GL_FALSE, glm::value_ptr(mvp));
-
-            glUseProgram(mesh.shaderProgram);
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, texture0);
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, texture1);
-            glBindVertexArray(mesh.vao);
-            glDrawElements(GL_TRIANGLES, mesh.count, GL_UNSIGNED_INT, 0);
-        }
-#endif
 
 // Rotate cubes
 #if 1
@@ -593,7 +503,7 @@ main(i32 argc, char **argv) {
         SDL_GL_SwapWindow(window);
     }
 
-    SDL_GL_DeleteContext(context);
+    SDL_GL_DeleteContext(glContext);
     SDL_DestroyWindow(window);
     return 0;
 }
