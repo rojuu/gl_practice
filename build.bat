@@ -17,9 +17,9 @@ set GLM_INC=%CD%\libs\glm-0.9.8.4\glm
 
 set STB_INC=%CD%\libs\stb
 
-set CommonCompilerFlags=/Zi /Od /EHsc /nologo /FC /I%SDL_INC% /I%GLEW_INC% /I%GLM_INC% /I%STB_INC%
+set CommonCompilerFlags=-Zi -Od -EHsc -nologo -FC -I%SDL_INC% -I%GLEW_INC% -I%GLM_INC% -I%STB_INC%
 
-set CommonLinkerFlags=/DEBUG /LIBPATH:%SDL_LIB% /LIBPATH:%GLEW_LIB% SDL2.lib SDL2main.lib glew32.lib opengl32.lib
+set CommonLinkerFlags=-debug -libpath:%SDL_LIB% -libpath:%GLEW_LIB% SDL2.lib SDL2main.lib glew32.lib opengl32.lib
 
 if not exist bin (
     mkdir bin

@@ -183,7 +183,7 @@ setUnfirorm1i(const char* name, i32 val) {
 }
 
 static void
-resizeWindow(RenderContext* renderContext, u32 width, u32 height) {
+resizeView(RenderContext* renderContext, u32 width, u32 height) {
     renderContext->width = width;
     renderContext->height = height;
     glViewport(0, 0, width, height);
@@ -261,16 +261,16 @@ main(i32 argc, char **argv) {
 #endif
 
     Vec3 cubePositions[]{
-        Vec3(0.0f, 0.0f, 0.0f),
-        Vec3(2.0f, 5.0f, -15.0f),
+        Vec3( 0.0f,  0.0f,  0.0f),
+        Vec3( 2.0f,  5.0f, -15.0f),
         Vec3(-1.5f, -2.2f, -2.5f),
         Vec3(-3.8f, -2.0f, -12.3f),
-        Vec3(2.4f, -0.4f, -3.5f),
-        Vec3(-1.7f, 3.0f, -7.5f),
-        Vec3(1.3f, -2.0f, -2.5f),
-        Vec3(1.5f, 2.0f, -2.5f),
-        Vec3(1.5f, 0.2f, -1.5f),
-        Vec3(-1.3f, 1.0f, -1.5f),
+        Vec3( 2.4f, -0.4f, -3.5f),
+        Vec3(-1.7f,  3.0f, -7.5f),
+        Vec3( 1.3f, -2.0f, -2.5f),
+        Vec3( 1.5f,  2.0f, -2.5f),
+        Vec3( 1.5f,  0.2f, -1.5f),
+        Vec3(-1.3f,  1.0f, -1.5f),
     };
     Rotation cubeRotations[]{
         {Vec3(0, 1, 0), glm::radians((float)30)},
@@ -396,7 +396,7 @@ main(i32 argc, char **argv) {
                 case SDL_WINDOWEVENT: {
                     switch(event.window.event) {
                         case SDL_WINDOWEVENT_SIZE_CHANGED: {
-                            resizeWindow(&renderContext, event.window.data1, event.window.data2);
+                            resizeView(&renderContext, event.window.data1, event.window.data2);
                         } break;
                     }
                 } break;
