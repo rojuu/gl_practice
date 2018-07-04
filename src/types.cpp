@@ -24,14 +24,6 @@ typedef glm::mat2 Mat2;
 typedef glm::mat3 Mat3;
 typedef glm::mat4 Mat4;
 
-struct FPCamera {
-    Vec2 position;
-    Vec2 direction;
-    f32 yaw, pitch;
-    f32 speed;
-    f32 eyeHeight;
-};
-
 //TODO: Make this a bitmask
 struct KeyboardInput {
     b32 left;
@@ -43,7 +35,7 @@ struct KeyboardInput {
 struct Mesh {
     u32 vao;
     u32 count;
-    u32 shaderProgram;
+    u32 shader_program;
 };
 
 struct Rotation {

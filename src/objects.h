@@ -1,6 +1,6 @@
 //Cube
 //TODO: Indices
-const f32 cubeVertexPositions[] = {
+const f32 cube_vertex_positions[] = {
     -0.5f, -0.5f, -0.5f,
     0.5f, -0.5f, -0.5f,
     0.5f, 0.5f, -0.5f,
@@ -43,7 +43,7 @@ const f32 cubeVertexPositions[] = {
     -0.5f, 0.5f, 0.5f,
     -0.5f, 0.5f, -0.5f};
 
-const f32 cubeNormals[] = {
+const f32 cube_normals[] = {
     0.0f, 0.0f, -1.0f,
     0.0f, 0.0f, -1.0f,
     0.0f, 0.0f, -1.0f,
@@ -86,7 +86,7 @@ const f32 cubeNormals[] = {
     0.0f, 1.0f, 0.0f,
     0.0f, 1.0f, 0.0f};
 
-const f32 cubeVertexColors[] = {
+const f32 cube_vertex_colors[] = {
     1.0f, 1.0f, 1.0f,
     1.0f, 1.0f, 1.0f,
     1.0f, 1.0f, 1.0f,
@@ -129,7 +129,7 @@ const f32 cubeVertexColors[] = {
     1.0f, 1.0f, 1.0f,
     1.0f, 1.0f, 1.0f};
 
-const f32 cubeTexCoords[] = {
+const f32 cube_tex_coords[] = {
     0.0f, 0.0f,
     1.0f, 0.0f,
     1.0f, 1.0f,

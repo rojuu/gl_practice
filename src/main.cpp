@@ -16,7 +16,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-#define arrayCount(x) ((sizeof(x) / sizeof(0 [x])) / ((size_t)(!(sizeof(x) % sizeof(0 [x])))))
+#define array_count(x) ((sizeof(x) / sizeof(0 [x])) / ((size_t)(!(sizeof(x) % sizeof(0 [x])))))
 
 #include "types.cpp"
 #include "math.cpp"
@@ -30,7 +30,7 @@ static const f32 PI = glm::pi<f32>();
 
 struct RenderContext {
     SDL_Window* window;
-    SDL_GLContext glContext;
+    SDL_GLContext gl_context;
     u32 width;
     u32 height;
 };
@@ -38,7 +38,7 @@ struct RenderContext {
 //TODO: Figure out the right length for the buffers in these
 // log message functions. 1024 might be a bit of an overkill.s
 static void
-logDebugMessage(const char* format, ...) {
+log_debug_message(const char* format, ...) {
 #ifndef NDEBUG
     char buffer[1024];
     va_list args;
@@ -50,7 +50,7 @@ logDebugMessage(const char* format, ...) {
 }
 
 static void
-logErrorMessage(const char* format, ...) {
+log_error_message(const char* format, ...) {
     char buffer[1024];
     va_list args;
     va_start(args, format);
@@ -60,65 +60,65 @@ logErrorMessage(const char* format, ...) {
 }
 
 static u32
-compileShader(const char *vertexShaderCode, const char *fragmentShaderCode) {
-    u32 vertexShaderID   = glCreateShader(GL_VERTEX_SHADER);
-    u32 fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
+compile_shader(const char *vertex_shader_code, const char *fragment_shader_code) {
+    u32 vertex_shader_id   = glCreateShader(GL_VERTEX_SHADER);
+    u32 fragment_shader_id = glCreateShader(GL_FRAGMENT_SHADER);
 
     i32 result = 0;
-    i32 infoLogLength;
+    i32 info_log_length;
 
     // Compile Vertex Shader
-    glShaderSource(vertexShaderID, 1, &vertexShaderCode, NULL);
-    glCompileShader(vertexShaderID);
+    glShaderSource(vertex_shader_id, 1, &vertex_shader_code, NULL);
+    glCompileShader(vertex_shader_id);
 
     // Check Vertex Shader
-    glGetShaderiv(vertexShaderID, GL_COMPILE_STATUS, &result);
-    glGetShaderiv(vertexShaderID, GL_INFO_LOG_LENGTH, &infoLogLength);
-    if(infoLogLength > 0) {
-        std::vector<char> vertexShaderErrorMessage(infoLogLength + 1);
-        glGetShaderInfoLog(vertexShaderID, infoLogLength, NULL, &vertexShaderErrorMessage[0]);
-        logErrorMessage("%s\n", &vertexShaderErrorMessage[0]);
+    glGetShaderiv(vertex_shader_id, GL_COMPILE_STATUS, &result);
+    glGetShaderiv(vertex_shader_id, GL_INFO_LOG_LENGTH, &info_log_length);
+    if(info_log_length > 0) {
+        std::vector<char> vertex_shader_error_message(info_log_length + 1);
+        glGetShaderInfoLog(vertex_shader_id, info_log_length, NULL, &vertex_shader_error_message[0]);
+        log_error_message("%s\n", &vertex_shader_error_message[0]);
     }
 
     // Compile Fragment Shader
-    glShaderSource(fragmentShaderID, 1, &fragmentShaderCode, NULL);
-    glCompileShader(fragmentShaderID);
+    glShaderSource(fragment_shader_id, 1, &fragment_shader_code, NULL);
+    glCompileShader(fragment_shader_id);
 
     // Check Fragment Shader
-    glGetShaderiv(fragmentShaderID, GL_COMPILE_STATUS, &result);
-    glGetShaderiv(fragmentShaderID, GL_INFO_LOG_LENGTH, &infoLogLength);
-    if(infoLogLength > 0) {
-        std::vector<char> fragmentShaderErrorMessage(infoLogLength + 1);
-        glGetShaderInfoLog(fragmentShaderID, infoLogLength, NULL, &fragmentShaderErrorMessage[0]);
-        logErrorMessage("%s\n", &fragmentShaderErrorMessage[0]);
+    glGetShaderiv(fragment_shader_id, GL_COMPILE_STATUS, &result);
+    glGetShaderiv(fragment_shader_id, GL_INFO_LOG_LENGTH, &info_log_length);
+    if(info_log_length > 0) {
+        std::vector<char> fragment_shader_error_message(info_log_length + 1);
+        glGetShaderInfoLog(fragment_shader_id, info_log_length, NULL, &fragment_shader_error_message[0]);
+        log_error_message("%s\n", &fragment_shader_error_message[0]);
     }
 
     // Link the program
-    u32 programID = glCreateProgram();
-    glAttachShader(programID, vertexShaderID);
-    glAttachShader(programID, fragmentShaderID);
-    glLinkProgram(programID);
+    u32 program_id = glCreateProgram();
+    glAttachShader(program_id, vertex_shader_id);
+    glAttachShader(program_id, fragment_shader_id);
+    glLinkProgram(program_id);
 
     // Check the program
-    glGetProgramiv(programID, GL_LINK_STATUS, &result);
-    glGetProgramiv(programID, GL_INFO_LOG_LENGTH, &infoLogLength);
-    if(infoLogLength > 0) {
-        std::vector<char> programErrorMessage(infoLogLength + 1);
-        glGetProgramInfoLog(programID, infoLogLength, NULL, &programErrorMessage[0]);
-        logErrorMessage("%s\n", &programErrorMessage[0]);
+    glGetProgramiv(program_id, GL_LINK_STATUS, &result);
+    glGetProgramiv(program_id, GL_INFO_LOG_LENGTH, &info_log_length);
+    if(info_log_length > 0) {
+        std::vector<char> program_error_message(info_log_length + 1);
+        glGetProgramInfoLog(program_id, info_log_length, NULL, &program_error_message[0]);
+        log_error_message("%s\n", &program_error_message[0]);
     }
 
-    glDetachShader(programID, vertexShaderID);
-    glDetachShader(programID, fragmentShaderID);
+    glDetachShader(program_id, vertex_shader_id);
+    glDetachShader(program_id, fragment_shader_id);
 
-    glDeleteShader(vertexShaderID);
-    glDeleteShader(fragmentShaderID);
+    glDeleteShader(vertex_shader_id);
+    glDeleteShader(fragment_shader_id);
 
-    return programID;
+    return program_id;
 }
 
 static u32
-loadTexture(const char *filename, bool flipVerticallyOnLoad, GLint internalFormat, GLenum format) {
+load_texture(const char *filename, bool flip_vertically_on_load, GLint internal_format, GLenum format) {
     u32 texture;
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
@@ -126,14 +126,14 @@ loadTexture(const char *filename, bool flipVerticallyOnLoad, GLint internalForma
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    i32 width, height, nrChannels;
-    stbi_set_flip_vertically_on_load(flipVerticallyOnLoad);
-    u8 *data = stbi_load(filename, &width, &height, &nrChannels, 0);
+    i32 width, height, nr_channels;
+    stbi_set_flip_vertically_on_load(flip_vertically_on_load);
+    u8 *data = stbi_load(filename, &width, &height, &nr_channels, 0);
     if(data) {
-        glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
     } else {
-        logErrorMessage("Failed to load texture\n");
+        log_error_message("Failed to load texture\n");
         return 0;
     }
     stbi_image_free(data);
@@ -141,19 +141,19 @@ loadTexture(const char *filename, bool flipVerticallyOnLoad, GLint internalForma
 }
 
 static inline u32
-loadTextureRGB(const char *filename, bool flipVerticallyOnLoad) {
-    u32 texture = loadTexture(filename, flipVerticallyOnLoad, GL_RGB, GL_RGB);
+load_texture_rgb(const char *filename, bool flip_vertically_on_load) {
+    u32 texture = load_texture(filename, flip_vertically_on_load, GL_RGB, GL_RGB);
     return texture;
 }
 
 static inline u32
-loadTextureRBGA(const char *filename, bool flipVerticallyOnLoad) {
-    u32 texture = loadTexture(filename, flipVerticallyOnLoad, GL_RGBA, GL_RGBA);
+load_texture_rgba(const char *filename, bool flip_vertically_on_load) {
+    u32 texture = load_texture(filename, flip_vertically_on_load, GL_RGBA, GL_RGBA);
     return texture;
 }
 
 static void
-setUniformMat4(const char *name, Mat4 matrix) {
+set_uniform_mat4(const char *name, Mat4 matrix) {
     i32 shader;
     glGetIntegerv(GL_CURRENT_PROGRAM, &shader);
 
@@ -162,7 +162,7 @@ setUniformMat4(const char *name, Mat4 matrix) {
 }
 
 static void
-setUniform3f(const char *name, f32 f1, f32 f2, f32 f3) {
+set_uniform3f(const char *name, f32 f1, f32 f2, f32 f3) {
     i32 shader;
     glGetIntegerv(GL_CURRENT_PROGRAM, &shader);
 
@@ -171,21 +171,21 @@ setUniform3f(const char *name, f32 f1, f32 f2, f32 f3) {
 }
 
 static void
-setUniformVec3(const char *name, Vec3 v) {
-    setUniform3f(name, v.x, v.y, v.z);
+set_uniform_vec3(const char *name, Vec3 v) {
+    set_uniform3f(name, v.x, v.y, v.z);
 }
 
 static void
-setUnfirorm1i(const char* name, i32 val) {
+set_unfirorm1i(const char* name, i32 val) {
     i32 shader;
     glGetIntegerv(GL_CURRENT_PROGRAM, &shader);
     glUniform1i(glGetUniformLocation(shader, name), val);
 }
 
 static void
-resizeView(RenderContext* renderContext, u32 width, u32 height) {
-    renderContext->width = width;
-    renderContext->height = height;
+resize_view(RenderContext* render_context, u32 width, u32 height) {
+    render_context->width = width;
+    render_context->height = height;
     glViewport(0, 0, width, height);
 }
 
@@ -193,24 +193,24 @@ i32
 main(i32 argc, char **argv) {
     // Init SDL stuff
     if(SDL_Init(SDL_INIT_VIDEO) < 0) {
-        logErrorMessage("SDL_Error: %s\n", SDL_GetError());
+        log_error_message("SDL_Error: %s\n", SDL_GetError());
         return -1;
     }
     atexit(SDL_Quit);
 
-    RenderContext renderContext;
-    renderContext.width = 512;
-    renderContext.height = 512;
+    RenderContext render_context;
+    render_context.width = 512;
+    render_context.height = 512;
 
     SDL_Window *window = SDL_CreateWindow(
         "GL_TEST",
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
-        renderContext.width, renderContext.height,
+        render_context.width, render_context.height,
         SDL_WINDOW_OPENGL|SDL_WINDOW_SHOWN|SDL_WINDOW_RESIZABLE);
 
     if(!window) {
-        logErrorMessage("SDL_Error: %s\n", SDL_GetError());
+        log_error_message("SDL_Error: %s\n", SDL_GetError());
         return -1;
     }
 
@@ -224,10 +224,10 @@ main(i32 argc, char **argv) {
 
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-    SDL_GLContext glContext = SDL_GL_CreateContext(window);
+    SDL_GLContext gl_context = SDL_GL_CreateContext(window);
 
-    renderContext.glContext = glContext;
-    renderContext.window = window;
+    render_context.gl_context = gl_context;
+    render_context.window = window;
 
     SDL_GL_SetSwapInterval(0);
 
@@ -240,19 +240,19 @@ main(i32 argc, char **argv) {
     glDepthFunc(GL_LESS);
 
     // Load shaders
-    u32 basicShader = compileShader(basic_vertex_shader, basic_fragment_shader);
-    u32 lightShader = compileShader(basic_vertex_shader, light_fragment_shader);
-    if(!basicShader ||
-       !lightShader) {
-        logErrorMessage("Error loading shaders.\n");
+    u32 basic_shader = compile_shader(basic_vertex_shader, basic_fragment_shader);
+    u32 light_shader = compile_shader(basic_vertex_shader, light_fragment_shader);
+    if(!basic_shader ||
+       !light_shader) {
+        log_error_message("Error loading shaders.\n");
         return -1;
     }
 
 //Load textures
 #define USE_TEXTURES 0
 #if USE_TEXTURES
-    u32 texture0 = loadTextureRGB("data/textures/container.jpg", true);
-    u32 texture1 = loadTextureRGBA("data/textures/awesomeface.png", true);
+    u32 texture0 = load_texture_rgb("data/textures/container.jpg", true);
+    u32 texture1 = load_texture_rgba("data/textures/awesomeface.png", true);
     if(!texture0 ||
        !texture1) {
         debugLog("Error loading textures.\n");
@@ -260,7 +260,7 @@ main(i32 argc, char **argv) {
     }
 #endif
 
-    Vec3 cubePositions[]{
+    Vec3 cube_positions[]{
         Vec3( 0.0f,  0.0f,  0.0f),
         Vec3( 2.0f,  5.0f, -15.0f),
         Vec3(-1.5f, -2.2f, -2.5f),
@@ -272,7 +272,7 @@ main(i32 argc, char **argv) {
         Vec3( 1.5f,  0.2f, -1.5f),
         Vec3(-1.3f,  1.0f, -1.5f),
     };
-    Rotation cubeRotations[]{
+    Rotation cube_rotations[]{
         {Vec3(0, 1, 0), glm::radians((float)30)},
         {Vec3(1, 1, 1), glm::radians((float)24)},
         {Vec3(0, 1, 1), glm::radians((float)30)},
@@ -284,39 +284,39 @@ main(i32 argc, char **argv) {
         {Vec3(0, 1, 1), glm::radians((float)30)},
         {Vec3(1, 0, 1), glm::radians((float)10)},
     };
-    const i32 cubeCount = arrayCount(cubePositions);
-    Mesh cubeMeshArray[cubeCount];
+    const i32 cube_count = array_count(cube_positions);
+    Mesh cube_mesh_array[cube_count];
 
-    u32 cubeVertexArray;
-    glGenVertexArrays(1, &cubeVertexArray);
+    u32 cube_vertex_array;
+    glGenVertexArrays(1, &cube_vertex_array);
 
-    u32 cubeVertexBuffer;
-    glGenBuffers(1, &cubeVertexBuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, cubeVertexBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertexPositions), cubeVertexPositions, GL_STATIC_DRAW);
+    u32 cube_vertex_buffer;
+    glGenBuffers(1, &cube_vertex_buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, cube_vertex_buffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cube_vertex_positions), cube_vertex_positions, GL_STATIC_DRAW);
 
-    u32 cubeNormalBuffer;
-    glGenBuffers(1, &cubeNormalBuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, cubeNormalBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeNormals), cubeNormals, GL_STATIC_DRAW);
+    u32 cube_normal_buffer;
+    glGenBuffers(1, &cube_normal_buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, cube_normal_buffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cube_normals), cube_normals, GL_STATIC_DRAW);
 
-    // u32 cubeColorBuffer;
-    // glGenBuffers(1, &cubeColorBuffer);
+    // u32 cube_color_buffer;
+    // glGenBuffers(1, &cube_color_buffer);
     // u32 cubeTexCoordBuffer;
     // glGenBuffers(1, &cubeTexCoordBuffer);
 
     //Make cube vertex array
-    glBindVertexArray(cubeVertexArray);
+    glBindVertexArray(cube_vertex_array);
 
-    glBindBuffer(GL_ARRAY_BUFFER, cubeVertexBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, cube_vertex_buffer);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(0);
 
-    glBindBuffer(GL_ARRAY_BUFFER, cubeNormalBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, cube_normal_buffer);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(1);
 
-    // glBindBuffer(GL_ARRAY_BUFFER, cubeColorBuffer);
+    // glBindBuffer(GL_ARRAY_BUFFER, cube_color_buffer);
     // glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
     // glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertexColors), cubeVertexColors, GL_STATIC_DRAW);
     // glEnableVertexAttribArray(1);
@@ -327,62 +327,62 @@ main(i32 argc, char **argv) {
     // glEnableVertexAttribArray(2);
 
     //Make light vertex array
-    u32 lightVertexArray;
-    glGenVertexArrays(1, &lightVertexArray);
+    u32 light_vertex_array;
+    glGenVertexArrays(1, &light_vertex_array);
 
-    glBindVertexArray(lightVertexArray);
-    glBindBuffer(GL_ARRAY_BUFFER, cubeVertexBuffer);
+    glBindVertexArray(light_vertex_array);
+    glBindBuffer(GL_ARRAY_BUFFER, cube_vertex_buffer);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(0);
 
     //Cube transform data;
-    const int cubeTriangleCount = arrayCount(cubeVertexPositions) / 3;
+    const int cube_triangle_count = array_count(cube_vertex_positions) / 3;
 
-    for(i32 i = 0; i < cubeCount; ++i) {
-        cubeMeshArray[i].vao           = cubeVertexArray;
-        cubeMeshArray[i].count         = cubeTriangleCount;
-        cubeMeshArray[i].shaderProgram = basicShader;
+    for(i32 i = 0; i < cube_count; ++i) {
+        cube_mesh_array[i].vao           = cube_vertex_array;
+        cube_mesh_array[i].count         = cube_triangle_count;
+        cube_mesh_array[i].shader_program = basic_shader;
     }
 
 #if USE_TEXTURES
-    glUseProgram(basicShader);
-    setUnfirorm1i("inTexture0", 0);
-    setUnfirorm1i("inTexture1", 1);
-    // glUniform1i(glGetUniformLocation(basicShader, "inTexture0"), 0);
-    // glUniform1i(glGetUniformLocation(basicShader, "inTexture1"), 1);
+    glUseProgram(basic_shader);
+    set_unfirorm1i("in_texture_0", 0);
+    set_unfirorm1i("in_texture_1", 1);
+    // glUniform1i(glGetUniformLocation(basic_shader, "in_texture0"), 0);
+    // glUniform1i(glGetUniformLocation(basic_shader, "in_texture1"), 1);
 #endif
 
-    Vec3 lightPos = Vec3(1.2f, 1.0f, 2.0f);
-    Vec3 viewPos = Vec3(0.0f, 2.0f, 3.0f);
+    Vec3 light_pos = Vec3(1.2f, 1.0f, 2.0f);
+    Vec3 view_pos = Vec3(0.0f, 2.0f, 3.0f);
 
-    glUseProgram(basicShader);
-    setUniform3f("objectColor", 1.0f, 0.5f, 0.31f);
-    setUniform3f("lightColor", 1.0f, 1.0f, 1.0f);
-    setUniformVec3("lightPos", lightPos);
-    setUniformVec3("viewPos", viewPos);
+    glUseProgram(basic_shader);
+    set_uniform3f("object_color", 1.0f, 0.5f, 0.31f);
+    set_uniform3f("light_color", 1.0f, 1.0f, 1.0f);
+    set_uniform_vec3("light_pos", light_pos);
+    set_uniform_vec3("view_pos", view_pos);
 
     b32 running = true;
-    f64 currentTime = (f32)SDL_GetPerformanceCounter() /
+    f64 current_time = (f32)SDL_GetPerformanceCounter() /
                       (f32)SDL_GetPerformanceFrequency();
-    f64 lastTime = 0;
-    f64 deltaTime = 0;
-    i32 frameCounter = 0;
-    i32 lastFrameCount = 0;
-    f64 lastFpsTime = 0;
+    f64 last_time = 0;
+    f64 delta_time = 0;
+    i32 frame_counter = 0;
+    i32 last_frame_count = 0;
+    f64 last_fps_time = 0;
     while(running) {
-        lastTime = currentTime;
-        currentTime = (f64)SDL_GetPerformanceCounter() /
+        last_time = current_time;
+        current_time = (f64)SDL_GetPerformanceCounter() /
                       (f64)SDL_GetPerformanceFrequency();
-        deltaTime = (f64)(currentTime - lastTime);
+        delta_time = (f64)(current_time - last_time);
 
         // Count frames for every second and print it as the title of the window
-        ++frameCounter;
-        if(currentTime >= (lastFpsTime + 1.f)) {
-            lastFpsTime     = currentTime;
-            i32 deltaFrames = frameCounter - lastFrameCount;
-            lastFrameCount  = frameCounter;
+        ++frame_counter;
+        if(current_time >= (last_fps_time + 1.f)) {
+            last_fps_time    = current_time;
+            i32 delta_frames = frame_counter - last_frame_count;
+            last_frame_count = frame_counter;
             char title[64];
-            sprintf(title, "FPS: %d", deltaFrames);
+            sprintf(title, "FPS: %d", delta_frames);
             SDL_SetWindowTitle(window, title);
         }
 
@@ -396,7 +396,7 @@ main(i32 argc, char **argv) {
                 case SDL_WINDOWEVENT: {
                     switch(event.window.event) {
                         case SDL_WINDOWEVENT_SIZE_CHANGED: {
-                            resizeView(&renderContext, event.window.data1, event.window.data2);
+                            resize_view(&render_context, event.window.data1, event.window.data2);
                         } break;
                     }
                 } break;
@@ -424,29 +424,29 @@ main(i32 argc, char **argv) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         Mat4 projection = glm::perspective(glm::radians(45.0f),
-                                         (f32)renderContext.width / (f32)renderContext.height, 0.1f, 100.0f);
+                                          (f32)render_context.width / (f32)render_context.height, 0.1f, 100.0f);
 
         Mat4 view = glm::lookAt(
-            viewPos,
+            view_pos,
             Vec3(0, 0, 0),
             Vec3(0, 1, 0)
         );
 
 // Rotate cubes
 #if 1
-        for(i32 i = 0; i < cubeCount; i += 1) {
-            float rotationAmount   = deltaTime;
-            cubeRotations[i].angle = fmod(cubeRotations[i].angle + rotationAmount, (PI * 2));
+        for(i32 i = 0; i < cube_count; i += 1) {
+            float rotation_amount   = delta_time;
+            cube_rotations[i].angle = fmod(cube_rotations[i].angle + rotation_amount, (PI * 2));
         }
 
-        // for(i32 i = 1; i < cubeCount; i += 3) {
-        //     float rotationAmount   = -deltaTime;
-        //     cubeRotations[i].angle = fmod(cubeRotations[i].angle + rotationAmount, (PI * 2));
+        // for(i32 i = 1; i < cube_count; i += 3) {
+        //     float rotation_amount   = -delta_time;
+        //     cube_rotations[i].angle = fmod(cube_rotations[i].angle + rotation_amount, (PI * 2));
         // }
 
-        // for(i32 i = 2; i < cubeCount; i += 3) {
-        //     float rotationAmount   = 0.5f * deltaTime;
-        //     cubeRotations[i].angle = fmod(cubeRotations[i].angle + rotationAmount, (PI * 2));
+        // for(i32 i = 2; i < cube_count; i += 3) {
+        //     float rotation_amount   = 0.5f * delta_time;
+        //     cube_rotations[i].angle = fmod(cube_rotations[i].angle + rotation_amount, (PI * 2));
         // }
 #endif
 
@@ -454,28 +454,28 @@ main(i32 argc, char **argv) {
 #if 1
         {
             Mat4 model = Mat4(1.0f);
-            model = glm::translate(model, lightPos);
+            model = glm::translate(model, light_pos);
             model = glm::scale(model, Vec3(0.3f));
 
-            glUseProgram(lightShader);
+            glUseProgram(light_shader);
 
-            setUniformMat4("model", model);
-            setUniformMat4("view", view);
-            setUniformMat4("projection", projection);
+            set_uniform_mat4("model", model);
+            set_uniform_mat4("view", view);
+            set_uniform_mat4("projection", projection);
 
-            glBindVertexArray(lightVertexArray);
-            glDrawArrays(GL_TRIANGLES, 0, cubeTriangleCount);
+            glBindVertexArray(light_vertex_array);
+            glDrawArrays(GL_TRIANGLES, 0, cube_triangle_count);
         }
 #endif
 
 // Draw cubes
 #if 1
-        for(i32 i = 0; i < cubeCount; i++) {
+        for(i32 i = 0; i < cube_count; i++) {
             // Vec3 scale = cubeScales[i];
             Vec3 scale = Vec3(1.0f);
-            Vec3 position = cubePositions[i];
-            Mesh mesh = cubeMeshArray[i];
-            Rotation rotation = cubeRotations[i];
+            Vec3 position = cube_positions[i];
+            Mesh mesh = cube_mesh_array[i];
+            Rotation rotation = cube_rotations[i];
 
             Mat4 model = Mat4(1.0f);
             model = glm::translate(model, position);
@@ -483,11 +483,11 @@ main(i32 argc, char **argv) {
             model = glm::scale(model, scale);
             // Mat4 mvp = projection * view * model;
 
-            glUseProgram(mesh.shaderProgram);
+            glUseProgram(mesh.shader_program);
 
-            setUniformMat4("model", model);
-            setUniformMat4("view", view);
-            setUniformMat4("projection", projection);
+            set_uniform_mat4("model", model);
+            set_uniform_mat4("view", view);
+            set_uniform_mat4("projection", projection);
 
             // glActiveTexture(GL_TEXTURE0);
             // glBindTexture(GL_TEXTURE_2D, texture0);
@@ -503,7 +503,7 @@ main(i32 argc, char **argv) {
         SDL_GL_SwapWindow(window);
     }
 
-    SDL_GL_DeleteContext(glContext);
+    SDL_GL_DeleteContext(gl_context);
     SDL_DestroyWindow(window);
     return 0;
 }

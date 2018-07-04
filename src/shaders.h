@@ -1,5 +1,5 @@
 /*
-  TODO: 
+  TODO:
     - Should we actually switch back to having these in separate text files?
 */
 
@@ -7,64 +7,64 @@ const char *basic_fragment_shader = R"FOO(
 #version 330 core
 out vec4 color;
 /*
-in vec3 vertexColor;
-in vec2 texCoord;
+in vec3 vertex_color;
+in vec2 tex_coord;
 */
 
 /*
-uniform sampler2D inTexture0;
-uniform sampler3D inTexture1;
+uniform sampler2D in_texture_0;
+uniform sampler3D in_texture_1;
 */
 
-uniform vec3 objectColor;
+uniform vec3 object_color;
 
-uniform vec3 lightColor;
-uniform vec3 lightPos;
+uniform vec3 light_color;
+uniform vec3 light_pos;
 
-uniform vec3 viewPos;
+uniform vec3 view_pos;
 
-in vec3 fragPos;
+in vec3 frag_pos;
 in vec3 normal;
 
 void main() {
-    float ambientStrength = 0.1;
-    vec3 ambient = ambientStrength * lightColor;
+    float ambient_strength = 0.1;
+    vec3 ambient = ambient_strength * light_color;
 
     vec3 norm = normalize(normal);
-    vec3 lightDir = normalize(lightPos - fragPos);
+    vec3 light_dir = normalize(light_pos - frag_pos);
 
-    float diff = max(dot(norm, lightDir), 0);
-    vec3 diffuse = diff * lightColor;
+    float diff = max(dot(norm, light_dir), 0);
+    vec3 diffuse = diff * light_color;
 
-    float specularStrength = 0.5;
+    float specular_strength = 0.5;
 
-    vec3 viewDir = normalize(viewPos - fragPos);
-    vec3 reflectDir = reflect(-lightDir, norm);
+    vec3 view_dir = normalize(view_pos - frag_pos);
+    vec3 reflect_dir = reflect(-light_dir, norm);
 
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
-    vec3 specular = specularStrength * spec * lightColor;
+    float spec = pow(max(dot(view_dir, reflect_dir), 0.0), 32);
+    vec3 specular = specular_strength * spec * light_color;
 
-    vec3 result = (ambient + diffuse + specular) * objectColor;
+    vec3 result = (ambient + diffuse + specular) * object_color;
     color = vec4(result, 1.0);
 }
 )FOO";
 
 const char *basic_vertex_shader = R"FOO(
 #version 330 core
-layout(location = 0) in vec3 inVertexPosition;
-layout(location = 1) in vec3 inNormal;
+layout(location = 0) in vec3 in_vertex_position;
+layout(location = 1) in vec3 in_normal;
 
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 
-out vec3 fragPos;
+out vec3 frag_pos;
 out vec3 normal;
 
 void main(){
-    gl_Position = projection * view * model * vec4(inVertexPosition, 1.0f);
-    fragPos = vec3(model * vec4(inVertexPosition, 1.0));
-    normal = mat3(transpose(inverse(model))) * inNormal;
+    gl_Position = projection * view * model * vec4(in_vertex_position, 1.0f);
+    frag_pos = vec3(model * vec4(in_vertex_position, 1.0));
+    normal = mat3(transpose(inverse(model))) * in_normal;
 }
 )FOO";
 
