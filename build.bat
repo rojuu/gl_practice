@@ -19,8 +19,9 @@ set ASSIMP_INC=%ASSIMP%\include
 set ASSIMP_LIB=%ASSIMP%\lib\x64
 
 set STB_INC=%CD%\libs\stb
+set HMM_INC=%CD%\libs\HandmadeMath
 
-set CommonCompilerFlags=-Zi -Od -EHsc -nologo -FC -I%SDL_INC% -I%GLEW_INC% -I%STB_INC% -I%ASSIMP_INC%
+set CommonCompilerFlags=-Zi -Od -EHsc -nologo -FC -I%SDL_INC% -I%GLEW_INC% -I%STB_INC% -I%HMM_INC% -I%ASSIMP_INC%
 
 set CommonLinkerFlags=-debug -libpath:%SDL_LIB% -libpath:%GLEW_LIB% -libpath:%ASSIMP_LIB% SDL2.lib SDL2main.lib glew32.lib opengl32.lib assimp-vc140-mt.lib
 
