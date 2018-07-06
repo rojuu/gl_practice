@@ -13,13 +13,16 @@ set GLEW_BIN=%GLEW%\bin\Release\%TARGET%
 set GLEW_INC=%GLEW%\include
 set GLEW_LIB=%GLEW%\lib\Release\%TARGET%
 
-set GLM_INC=%CD%\libs\glm-0.9.8.4\glm
+
+set ASSIMP=%CD%\libs\Assimp
+set ASSIMP_INC=%ASSIMP%\include
+set ASSIMP_LIB=%ASSIMP%\lib\x64
 
 set STB_INC=%CD%\libs\stb
 
-set CommonCompilerFlags=-Zi -Od -EHsc -nologo -FC -I%SDL_INC% -I%GLEW_INC% -I%GLM_INC% -I%STB_INC%
+set CommonCompilerFlags=-Zi -Od -EHsc -nologo -FC -I%SDL_INC% -I%GLEW_INC% -I%STB_INC% -I%ASSIMP_INC%
 
-set CommonLinkerFlags=-debug -libpath:%SDL_LIB% -libpath:%GLEW_LIB% SDL2.lib SDL2main.lib glew32.lib opengl32.lib
+set CommonLinkerFlags=-debug -libpath:%SDL_LIB% -libpath:%GLEW_LIB% -libpath:%ASSIMP_LIB% SDL2.lib SDL2main.lib glew32.lib opengl32.lib assimp-vc140-mt.lib
 
 if not exist bin (
     mkdir bin

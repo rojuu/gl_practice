@@ -16,13 +16,11 @@ typedef i16 b16;
 typedef i32 b32;
 typedef i64 b64;
 
-typedef glm::vec2 Vec2;
-typedef glm::vec3 Vec3;
-typedef glm::vec4 Vec4;
-
-typedef glm::mat2 Mat2;
-typedef glm::mat3 Mat3;
-typedef glm::mat4 Mat4;
+typedef hmm_vec2 Vec2;
+typedef hmm_vec3 Vec3;
+typedef hmm_vec4 Vec4;
+    
+typedef hmm_mat4 Mat4;
 
 //TODO: Make this a bitmask
 struct KeyboardInput {

@@ -7,16 +7,19 @@
 #include <vector>
 #include "SDL.h"
 #include "GL/glew.h"
-#include "glm/glm.hpp"
-#include "glm/vec3.hpp"
-#include "glm/gtc/type_ptr.hpp"
-#include "glm/gtc/matrix_transform.hpp"
-#include <cstdint>
+// #include "glm/glm.hpp"
+// #include "glm/vec3.hpp"
+// #include "glm/gtc/type_ptr.hpp"
+// #include "glm/gtc/matrix_transform.hpp"
+#include <stdint.h>
 #include <stdarg.h>
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
 #define array_count(x) ((sizeof(x) / sizeof(0 [x])) / ((size_t)(!(sizeof(x) % sizeof(0 [x])))))
+
+#define HANDMADE_MATH_IMPLEMENTATION
+#include "HandmadeMath.h"
 
 #include "types.cpp"
 #include "math.cpp"
@@ -26,7 +29,7 @@
 
 #include <assert.h>
 
-static const f32 PI = glm::pi<f32>();
+static const f32 PI = HMM_PI; // glm::pi<f32>();
 
 struct RenderContext {
     SDL_Window* window;
@@ -158,11 +161,11 @@ set_uniform_mat4(const char *name, Mat4 matrix) {
     glGetIntegerv(GL_CURRENT_PROGRAM, &shader);
 
     u32 handle = glGetUniformLocation(shader, name);
-    glUniformMatrix4fv(handle, 1, GL_FALSE, glm::value_ptr(matrix));
+    glUniformMatrix4fv(handle, 1, GL_FALSE, &matrix.Elements[0][0]);
 }
 
 static void
-set_uniform3f(const char *name, f32 f1, f32 f2, f32 f3) {
+set_uniform_3f(const char *name, f32 f1, f32 f2, f32 f3) {
     i32 shader;
     glGetIntegerv(GL_CURRENT_PROGRAM, &shader);
 
@@ -172,11 +175,11 @@ set_uniform3f(const char *name, f32 f1, f32 f2, f32 f3) {
 
 static void
 set_uniform_vec3(const char *name, Vec3 v) {
-    set_uniform3f(name, v.x, v.y, v.z);
+    set_uniform_3f(name, v.x, v.y, v.z);
 }
 
 static void
-set_unfirorm1i(const char* name, i32 val) {
+set_unfirorm_1i(const char* name, i32 val) {
     i32 shader;
     glGetIntegerv(GL_CURRENT_PROGRAM, &shader);
     glUniform1i(glGetUniformLocation(shader, name), val);
@@ -261,29 +264,30 @@ main(i32 argc, char **argv) {
 #endif
 
     Vec3 cube_positions[]{
-        Vec3( 0.0f,  0.0f,  0.0f),
-        Vec3( 2.0f,  5.0f, -15.0f),
-        Vec3(-1.5f, -2.2f, -2.5f),
-        Vec3(-3.8f, -2.0f, -12.3f),
-        Vec3( 2.4f, -0.4f, -3.5f),
-        Vec3(-1.7f,  3.0f, -7.5f),
-        Vec3( 1.3f, -2.0f, -2.5f),
-        Vec3( 1.5f,  2.0f, -2.5f),
-        Vec3( 1.5f,  0.2f, -1.5f),
-        Vec3(-1.3f,  1.0f, -1.5f),
+        vec3( 0.0f,  0.0f,  0.0f),
+        vec3( 2.0f,  5.0f, -15.0f),
+        vec3(-1.5f, -2.2f, -2.5f),
+        vec3(-3.8f, -2.0f, -12.3f),
+        vec3( 2.4f, -0.4f, -3.5f),
+        vec3(-1.7f,  3.0f, -7.5f),
+        vec3( 1.3f, -2.0f, -2.5f),
+        vec3( 1.5f,  2.0f, -2.5f),
+        vec3( 1.5f,  0.2f, -1.5f),
+        vec3(-1.3f,  1.0f, -1.5f),
     };
     Rotation cube_rotations[]{
-        {Vec3(0, 1, 0), glm::radians((float)30)},
-        {Vec3(1, 1, 1), glm::radians((float)24)},
-        {Vec3(0, 1, 1), glm::radians((float)30)},
-        {Vec3(1, 1, 0), glm::radians((float)60)},
-        {Vec3(1, 1, 0), glm::radians((float)60)},
-        {Vec3(0, 1, 1), glm::radians((float)30)},
-        {Vec3(1, 1, 1), glm::radians((float)24)},
-        {Vec3(0, 1, 1), glm::radians((float)30)},
-        {Vec3(0, 1, 1), glm::radians((float)30)},
-        {Vec3(1, 0, 1), glm::radians((float)10)},
+        {vec3(0, 1, 0), 30},
+        {vec3(1, 1, 1), 24},
+        {vec3(0, 1, 1), 30},
+        {vec3(1, 1, 0), 60},
+        {vec3(1, 1, 0), 60},
+        {vec3(0, 1, 1), 30},
+        {vec3(1, 1, 1), 24},
+        {vec3(0, 1, 1), 30},
+        {vec3(0, 1, 1), 30},
+        {vec3(1, 0, 1), 10},
     };
+
     const i32 cube_count = array_count(cube_positions);
     Mesh cube_mesh_array[cube_count];
 
@@ -352,12 +356,12 @@ main(i32 argc, char **argv) {
     // glUniform1i(glGetUniformLocation(basic_shader, "in_texture1"), 1);
 #endif
 
-    Vec3 light_pos = Vec3(1.2f, 1.0f, 2.0f);
-    Vec3 view_pos = Vec3(0.0f, 2.0f, 3.0f);
+    Vec3 light_pos = {1.2f, 1.0f, 2.0f};
+    Vec3 view_pos  = {0.0f, 2.0f, 3.0f};
 
     glUseProgram(basic_shader);
-    set_uniform3f("object_color", 1.0f, 0.5f, 0.31f);
-    set_uniform3f("light_color", 1.0f, 1.0f, 1.0f);
+    set_uniform_3f("object_color", 1.0f, 0.5f, 0.31f);
+    set_uniform_3f("light_color", 1.0f, 1.0f, 1.0f);
     set_uniform_vec3("light_pos", light_pos);
     set_uniform_vec3("view_pos", view_pos);
 
@@ -423,39 +427,28 @@ main(i32 argc, char **argv) {
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        Mat4 projection = glm::perspective(glm::radians(45.0f),
-                                          (f32)render_context.width / (f32)render_context.height, 0.1f, 100.0f);
+        Mat4 projection = HMM_Perspective(90.f, (f32)render_context.width / (f32)render_context.height, 0.1f, 1000.f);
 
-        Mat4 view = glm::lookAt(
+        Mat4 view = HMM_LookAt(
             view_pos,
-            Vec3(0, 0, 0),
-            Vec3(0, 1, 0)
+            vec3(0, 0, 0),
+            vec3(0, 1, 0)
         );
 
 // Rotate cubes
 #if 1
-        for(i32 i = 0; i < cube_count; i += 1) {
-            float rotation_amount   = delta_time;
-            cube_rotations[i].angle = fmod(cube_rotations[i].angle + rotation_amount, (PI * 2));
+        for(i32 i = 0; i < cube_count; i++) {
+            float rotation_amount   = delta_time * 100;
+            cube_rotations[i].angle = fmod(cube_rotations[i].angle + rotation_amount, 360);
         }
-
-        // for(i32 i = 1; i < cube_count; i += 3) {
-        //     float rotation_amount   = -delta_time;
-        //     cube_rotations[i].angle = fmod(cube_rotations[i].angle + rotation_amount, (PI * 2));
-        // }
-
-        // for(i32 i = 2; i < cube_count; i += 3) {
-        //     float rotation_amount   = 0.5f * delta_time;
-        //     cube_rotations[i].angle = fmod(cube_rotations[i].angle + rotation_amount, (PI * 2));
-        // }
 #endif
 
 // Draw light source
 #if 1
         {
-            Mat4 model = Mat4(1.0f);
-            model = glm::translate(model, light_pos);
-            model = glm::scale(model, Vec3(0.3f));
+            Mat4 model = HMM_Mat4d(1.0f);
+            model = HMM_Multiply(model, HMM_Translate(light_pos));
+            model = HMM_Multiply(model, HMM_Scale(vec3(0.3f, 0.3f, 0.3f)));
 
             glUseProgram(light_shader);
 
@@ -472,15 +465,15 @@ main(i32 argc, char **argv) {
 #if 1
         for(i32 i = 0; i < cube_count; i++) {
             // Vec3 scale = cubeScales[i];
-            Vec3 scale = Vec3(1.0f);
+            Vec3 scale = vec3(1.0f, 1.0f, 1.0f);
             Vec3 position = cube_positions[i];
             Mesh mesh = cube_mesh_array[i];
             Rotation rotation = cube_rotations[i];
 
-            Mat4 model = Mat4(1.0f);
-            model = glm::translate(model, position);
-            model = glm::rotate(model, rotation.angle, rotation.axis);
-            model = glm::scale(model, scale);
+            Mat4 model = HMM_Mat4d(1.0f);
+            model = HMM_Multiply(model, HMM_Translate(position));
+            model = HMM_Multiply(model, HMM_Rotate(rotation.angle, rotation.axis));
+            model = HMM_Multiply(model, HMM_Scale(scale));
             // Mat4 mvp = projection * view * model;
 
             glUseProgram(mesh.shader_program);
