@@ -26,20 +26,20 @@ typedef hmm_vec4 Vec4;
 typedef hmm_mat4 Mat4;
 
 //TODO: Make this a bitmask
-typedef struct KeyboardInput {
+typedef struct {
     b32 left;
     b32 right;
     b32 up;
     b32 down;
 } KeyboardInput;
 
-typedef struct Mesh {
+typedef struct {
     u32 vao;
     u32 count;
     u32 shader_program;
 } Mesh;
 
-typedef struct Rotation {
+typedef struct {
     Vec3 axis;
     f32 angle;
 } Rotation;

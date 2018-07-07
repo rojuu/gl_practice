@@ -33,7 +33,7 @@
 
 static const f32 PI = HMM_PI; // glm::pi<f32>();
 
-typedef struct RenderContext {
+typedef struct {
     SDL_Window* window;
     SDL_GLContext gl_context;
     u32 width;
