@@ -124,7 +124,7 @@ compile_shader(const char *vertex_shader_code, const char *fragment_shader_code)
 }
 
 static u32
-read_file(const char* filename, char** file_contents) {
+read_file_contents(const char* filename, char** file_contents) {
     HANDLE file_handle;
 
     u32 number_of_bytes;
@@ -156,23 +156,28 @@ read_file(const char* filename, char** file_contents) {
     return number_of_bytes;
 }
 
+static void
+free_file_contents(char* file_contents) {
+    free(file_contents);
+}
+
 static u32
 load_and_compile_shader(const char *vertex_shader_path, const char *fragment_shader_path) {
     u32 program = 0;
 
     char* vertex_shader_source;
     char* fragment_shader_source;
-    if(!read_file(vertex_shader_path, &vertex_shader_source)) {
+    if(!read_file_contents(vertex_shader_path, &vertex_shader_source)) {
         return 0;
     }
-    if(!read_file(fragment_shader_path, &fragment_shader_source)) {
+    if(!read_file_contents(fragment_shader_path, &fragment_shader_source)) {
         return 0;
     }
 
     program = compile_shader(vertex_shader_source, fragment_shader_source);
 
-    free(vertex_shader_source);
-    free(fragment_shader_source);
+    free_file_contents(vertex_shader_source);
+    free_file_contents(fragment_shader_source);
 
     return program;
 }
