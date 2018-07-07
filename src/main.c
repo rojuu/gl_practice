@@ -1,7 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmacro-redefined"
 #include "SDL.h"
+#pragma clang diagnostic pop
+
 #include "GL/glew.h"
 // #include "glm/glm.hpp"
 // #include "glm/vec3.hpp"
@@ -36,14 +41,15 @@ typedef struct RenderContext {
 } RenderContext;
 
 //TODO: Figure out the right length for the buffers in these
-// log message functions. 1024 might be a bit of an overkill.s
+// log message functions. 1024 might be a bit of an overkill.
+#define buffer_size 1024
 static void
 log_debug_message(const char* format, ...) {
 #ifndef NDEBUG
-    char buffer[1024];
+    char buffer[buffer_size];
     va_list args;
     va_start(args, format);
-    vsprintf(buffer, format, args);
+    vsprintf_s(buffer, buffer_size, format, args);
     SDL_Log(buffer);
     va_end(args);
 #endif
@@ -51,13 +57,14 @@ log_debug_message(const char* format, ...) {
 
 static void
 log_error_message(const char* format, ...) {
-    char buffer[1024];
+    char buffer[buffer_size];
     va_list args;
     va_start(args, format);
-    vsprintf(buffer, format, args);
+    vsprintf_s(buffer, buffer_size, format, args);
     SDL_Log(buffer);
     va_end(args);
 }
+#undef buffer_size
 
 static u32
 compile_shader(const char *vertex_shader_code, const char *fragment_shader_code) {
@@ -138,7 +145,7 @@ read_file(const char* filename, char** file_contents) {
     number_of_bytes = (u32)large_integer.QuadPart;
 
     char* buffer = malloc(number_of_bytes);
-    if(!ReadFile(file_handle, buffer, number_of_bytes, &number_of_bytes_read, 0)) {
+    if(!ReadFile(file_handle, buffer, number_of_bytes, (LPDWORD)&number_of_bytes_read, 0)) {
         return 0;
     }
 

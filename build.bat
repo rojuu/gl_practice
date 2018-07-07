@@ -28,6 +28,9 @@ set CommonLinkerFlags=-debug -libpath:%SDL_LIB% -libpath:%GLEW_LIB% -libpath:%AS
 if not exist bin (
     mkdir bin
 )
+
+set ROOT_DIR=%CD%
+
 pushd bin
 
 if not exist SDL2.dll (
@@ -37,6 +40,7 @@ if not exist glew32.dll (
     robocopy %GLEW_BIN% . glew32.dll
 )
 
-cl %CommonCompilerFlags% ..\src\main.c /link /subsystem:windows %CommonLinkerFlags% /out:%EXE_NAME%
+echo Start
+clang-cl %CommonCompilerFlags% %ROOT_DIR%\src\main.c -link -subsystem:windows %CommonLinkerFlags% /out:%EXE_NAME%
 popd
 echo Done
