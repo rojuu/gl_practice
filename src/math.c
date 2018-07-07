@@ -52,7 +52,7 @@ noz_vec2(Vec2 input) {
     return result;
 }
 
-static Vec3
+static inline Vec3
 rotate_vec3(Vec3 in, Vec3 axis, f32 theta) {
     f32 cosTheta = HMM_CosF(theta);
     f32 sinTheta = HMM_SinF(theta);
@@ -67,14 +67,14 @@ rotate_vec3(Vec3 in, Vec3 axis, f32 theta) {
     return result;
 }
 
-inline f32
+static inline f32
 angle_between_vec3(Vec3 a, Vec3 b) {
     Vec3 da = noz_vec3(a);
     Vec3 db = noz_vec3(b);
     return HMM_ACosF(HMM_DotVec3(da, db));
 }
 
-inline f32
+static inline f32
 angle_between_origin_vec3(Vec3 a, Vec3 b, Vec3 origin) {
     Vec3 da = noz_vec3(HMM_SubtractVec3(a, origin));
     Vec3 db = noz_vec3(HMM_SubtractVec3(b, origin));

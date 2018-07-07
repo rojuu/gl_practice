@@ -156,7 +156,7 @@ read_file_contents(const char* filename, char** file_contents) {
     return number_of_bytes;
 }
 
-static void
+static inline void
 free_file_contents(char* file_contents) {
     free(file_contents);
 }
@@ -217,7 +217,7 @@ load_texture_rgba(const char *filename, b32 flip_vertically_on_load) {
     return texture;
 }
 
-static void
+static inline void
 set_uniform_mat4(const char *name, Mat4 matrix) {
     i32 shader;
     glGetIntegerv(GL_CURRENT_PROGRAM, &shader);
@@ -226,7 +226,7 @@ set_uniform_mat4(const char *name, Mat4 matrix) {
     glUniformMatrix4fv(handle, 1, GL_FALSE, &matrix.Elements[0][0]);
 }
 
-static void
+static inline void
 set_uniform_3f(const char *name, f32 f1, f32 f2, f32 f3) {
     i32 shader;
     glGetIntegerv(GL_CURRENT_PROGRAM, &shader);
@@ -235,19 +235,19 @@ set_uniform_3f(const char *name, f32 f1, f32 f2, f32 f3) {
     glUniform3f(handle, f1, f2, f3);
 }
 
-static void
+static inline void
 set_uniform_vec3(const char *name, Vec3 v) {
     set_uniform_3f(name, v.x, v.y, v.z);
 }
 
-static void
+static inline void
 set_unfirorm_1i(const char* name, i32 val) {
     i32 shader;
     glGetIntegerv(GL_CURRENT_PROGRAM, &shader);
     glUniform1i(glGetUniformLocation(shader, name), val);
 }
 
-static void
+static inline void
 resize_view(RenderContext* render_context, u32 width, u32 height) {
     render_context->width = width;
     render_context->height = height;
