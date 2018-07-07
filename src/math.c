@@ -56,8 +56,14 @@ static Vec3
 rotate_vec3(Vec3 in, Vec3 axis, f32 theta) {
     f32 cosTheta = HMM_CosF(theta);
     f32 sinTheta = HMM_SinF(theta);
-    //TODO: Make this a bit more clear
-    Vec3 result = HMM_AddVec3(HMM_AddVec3(HMM_MultiplyVec3f(in, cosTheta), HMM_MultiplyVec3f(HMM_Cross(axis, in), sinTheta)), HMM_MultiplyVec3f(HMM_MultiplyVec3f(axis, HMM_DotVec3(axis, in)), 1 - cosTheta));
+    Vec3 result = 
+        HMM_AddVec3(
+            HMM_AddVec3(
+                HMM_MultiplyVec3f(in, cosTheta), 
+                HMM_MultiplyVec3f(HMM_Cross(axis, in), sinTheta)),
+            HMM_MultiplyVec3f(
+                HMM_MultiplyVec3f(axis, HMM_DotVec3(axis, in)),
+                1 - cosTheta));
     return result;
 }
 
@@ -69,7 +75,7 @@ angle_between_vec3(Vec3 a, Vec3 b) {
 }
 
 inline f32
-angle_between_vec3_origin(Vec3 a, Vec3 b, Vec3 origin) {
+angle_between_origin_vec3(Vec3 a, Vec3 b, Vec3 origin) {
     Vec3 da = noz_vec3(HMM_SubtractVec3(a, origin));
     Vec3 db = noz_vec3(HMM_SubtractVec3(b, origin));
     return HMM_ACosF(HMM_DotVec3(da, db));
