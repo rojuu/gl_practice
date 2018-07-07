@@ -126,24 +126,24 @@ compile_shader(const char *vertex_shader_code, const char *fragment_shader_code)
 
 static u32
 read_file_contents(const char* filename, char** file_contents) {
-    HANDLE file_handle;
-
-    u32 number_of_bytes;
     u32 number_of_bytes_read = 0;
-
-    LARGE_INTEGER large_integer;
-
-    file_handle = CreateFileA(filename, GENERIC_READ, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+    HANDLE file_handle = CreateFileA(filename,
+                                     GENERIC_READ,
+                                     0, 0,
+                                     OPEN_EXISTING,
+                                     FILE_ATTRIBUTE_NORMAL,
+                                     0);
 
     if(file_handle == INVALID_HANDLE_VALUE) {
         return 0;
     }
 
+    LARGE_INTEGER large_integer;
     if(!GetFileSizeEx(file_handle, &large_integer)) {
         return 0;
     }
 
-    number_of_bytes = (u32)large_integer.QuadPart;
+    u32 number_of_bytes = (u32)large_integer.QuadPart;
 
     char* buffer = malloc(number_of_bytes);
     if(!ReadFile(file_handle, buffer, number_of_bytes, (LPDWORD)&number_of_bytes_read, 0)) {
