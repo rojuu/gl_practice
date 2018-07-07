@@ -16,27 +16,30 @@ typedef i16 b16;
 typedef i32 b32;
 typedef i64 b64;
 
+#define true 1
+#define false 0
+
 typedef hmm_vec2 Vec2;
 typedef hmm_vec3 Vec3;
 typedef hmm_vec4 Vec4;
-    
+
 typedef hmm_mat4 Mat4;
 
 //TODO: Make this a bitmask
-struct KeyboardInput {
+typedef struct KeyboardInput {
     b32 left;
     b32 right;
     b32 up;
     b32 down;
-};
+} KeyboardInput;
 
-struct Mesh {
+typedef struct Mesh {
     u32 vao;
     u32 count;
     u32 shader_program;
-};
+} Mesh;
 
-struct Rotation {
+typedef struct Rotation {
     Vec3 axis;
     f32 angle;
-};
+} Rotation;

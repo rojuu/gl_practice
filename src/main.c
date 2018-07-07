@@ -1,10 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <vector>
 #include "SDL.h"
 #include "GL/glew.h"
 // #include "glm/glm.hpp"
@@ -15,14 +11,15 @@
 #include <stdarg.h>
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+#include <windows.h>
 
 #define array_count(x) ((sizeof(x) / sizeof(0 [x])) / ((size_t)(!(sizeof(x) % sizeof(0 [x])))))
 
 #define HANDMADE_MATH_IMPLEMENTATION
 #include "HandmadeMath.h"
 
-#include "types.cpp"
-#include "math.cpp"
+#include "types.c"
+#include "math.c"
 
 #include "shaders.h"
 #include "objects.h"
@@ -31,12 +28,12 @@
 
 static const f32 PI = HMM_PI; // glm::pi<f32>();
 
-struct RenderContext {
+typedef struct RenderContext {
     SDL_Window* window;
     SDL_GLContext gl_context;
     u32 width;
     u32 height;
-};
+} RenderContext;
 
 //TODO: Figure out the right length for the buffers in these
 // log message functions. 1024 might be a bit of an overkill.s
@@ -70,6 +67,8 @@ compile_shader(const char *vertex_shader_code, const char *fragment_shader_code)
     i32 result = 0;
     i32 info_log_length;
 
+    char error_message_buffer[1024];
+
     // Compile Vertex Shader
     glShaderSource(vertex_shader_id, 1, &vertex_shader_code, NULL);
     glCompileShader(vertex_shader_id);
@@ -78,9 +77,8 @@ compile_shader(const char *vertex_shader_code, const char *fragment_shader_code)
     glGetShaderiv(vertex_shader_id, GL_COMPILE_STATUS, &result);
     glGetShaderiv(vertex_shader_id, GL_INFO_LOG_LENGTH, &info_log_length);
     if(info_log_length > 0) {
-        std::vector<char> vertex_shader_error_message(info_log_length + 1);
-        glGetShaderInfoLog(vertex_shader_id, info_log_length, NULL, &vertex_shader_error_message[0]);
-        log_error_message("%s\n", &vertex_shader_error_message[0]);
+        glGetShaderInfoLog(vertex_shader_id, info_log_length, NULL, error_message_buffer);
+        log_error_message("%s\n", error_message_buffer);
     }
 
     // Compile Fragment Shader
@@ -91,9 +89,8 @@ compile_shader(const char *vertex_shader_code, const char *fragment_shader_code)
     glGetShaderiv(fragment_shader_id, GL_COMPILE_STATUS, &result);
     glGetShaderiv(fragment_shader_id, GL_INFO_LOG_LENGTH, &info_log_length);
     if(info_log_length > 0) {
-        std::vector<char> fragment_shader_error_message(info_log_length + 1);
-        glGetShaderInfoLog(fragment_shader_id, info_log_length, NULL, &fragment_shader_error_message[0]);
-        log_error_message("%s\n", &fragment_shader_error_message[0]);
+        glGetShaderInfoLog(fragment_shader_id, info_log_length, NULL, error_message_buffer);
+        log_error_message("%s\n", error_message_buffer);
     }
 
     // Link the program
@@ -106,9 +103,8 @@ compile_shader(const char *vertex_shader_code, const char *fragment_shader_code)
     glGetProgramiv(program_id, GL_LINK_STATUS, &result);
     glGetProgramiv(program_id, GL_INFO_LOG_LENGTH, &info_log_length);
     if(info_log_length > 0) {
-        std::vector<char> program_error_message(info_log_length + 1);
-        glGetProgramInfoLog(program_id, info_log_length, NULL, &program_error_message[0]);
-        log_error_message("%s\n", &program_error_message[0]);
+        glGetProgramInfoLog(program_id, info_log_length, NULL, error_message_buffer);
+        log_error_message("%s\n", error_message_buffer);
     }
 
     glDetachShader(program_id, vertex_shader_id);
@@ -121,7 +117,61 @@ compile_shader(const char *vertex_shader_code, const char *fragment_shader_code)
 }
 
 static u32
-load_texture(const char *filename, bool flip_vertically_on_load, GLint internal_format, GLenum format) {
+read_file(const char* filename, char** file_contents) {
+    HANDLE file_handle;
+
+    u32 number_of_bytes;
+    u32 number_of_bytes_read = 0;
+
+    LARGE_INTEGER large_integer;
+
+    file_handle = CreateFileA(filename, GENERIC_READ, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+
+    if(file_handle == INVALID_HANDLE_VALUE) {
+        return 0;
+    }
+
+    if(!GetFileSizeEx(file_handle, &large_integer)) {
+        return 0;
+    }
+
+    number_of_bytes = (u32)large_integer.QuadPart;
+
+    char* buffer = malloc(number_of_bytes);
+    if(!ReadFile(file_handle, buffer, number_of_bytes, &number_of_bytes_read, 0)) {
+        return 0;
+    }
+
+    *file_contents = buffer;
+
+    CloseHandle(file_handle);
+
+    return number_of_bytes;
+}
+
+static u32
+load_and_compile_shader(const char *vertex_shader_path, const char *fragment_shader_path) {
+    u32 program = 0;
+
+    char* vertex_shader_source;
+    char* fragment_shader_source;
+    if(!read_file(vertex_shader_path, &vertex_shader_source)) {
+        return 0;
+    }
+    if(!read_file(fragment_shader_path, &fragment_shader_source)) {
+        return 0;
+    }
+
+    program = compile_shader(vertex_shader_source, fragment_shader_source);
+
+    free(vertex_shader_source);
+    free(fragment_shader_source);
+
+    return program;
+}
+
+static u32
+load_texture(const char *filename, b32 flip_vertically_on_load, GLint internal_format, GLenum format) {
     u32 texture;
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
@@ -144,13 +194,13 @@ load_texture(const char *filename, bool flip_vertically_on_load, GLint internal_
 }
 
 static inline u32
-load_texture_rgb(const char *filename, bool flip_vertically_on_load) {
+load_texture_rgb(const char *filename, b32 flip_vertically_on_load) {
     u32 texture = load_texture(filename, flip_vertically_on_load, GL_RGB, GL_RGB);
     return texture;
 }
 
 static inline u32
-load_texture_rgba(const char *filename, bool flip_vertically_on_load) {
+load_texture_rgba(const char *filename, b32 flip_vertically_on_load) {
     u32 texture = load_texture(filename, flip_vertically_on_load, GL_RGBA, GL_RGBA);
     return texture;
 }
@@ -243,8 +293,10 @@ main(i32 argc, char **argv) {
     glDepthFunc(GL_LESS);
 
     // Load shaders
-    u32 basic_shader = compile_shader(basic_vertex_shader, basic_fragment_shader);
-    u32 light_shader = compile_shader(basic_vertex_shader, light_fragment_shader);
+    u32 basic_shader = load_and_compile_shader("data\\shaders\\basic_vertex.glsl",
+                                               "data\\shaders\\basic_fragment.glsl");
+    u32 light_shader = load_and_compile_shader("data\\shaders\\basic_vertex.glsl",
+                                               "data\\shaders\\light_fragment.glsl");
     if(!basic_shader ||
        !light_shader) {
         log_error_message("Error loading shaders.\n");
@@ -263,7 +315,7 @@ main(i32 argc, char **argv) {
     }
 #endif
 
-    Vec3 cube_positions[]{
+    Vec3 cube_positions[] = {
         vec3( 0.0f,  0.0f,  0.0f),
         vec3( 2.0f,  5.0f, -15.0f),
         vec3(-1.5f, -2.2f, -2.5f),
@@ -275,7 +327,7 @@ main(i32 argc, char **argv) {
         vec3( 1.5f,  0.2f, -1.5f),
         vec3(-1.3f,  1.0f, -1.5f),
     };
-    Rotation cube_rotations[]{
+    Rotation cube_rotations[] = {
         {vec3(0, 1, 0), 30},
         {vec3(1, 1, 1), 24},
         {vec3(0, 1, 1), 30},
@@ -288,8 +340,8 @@ main(i32 argc, char **argv) {
         {vec3(1, 0, 1), 10},
     };
 
-    const i32 cube_count = array_count(cube_positions);
-    Mesh cube_mesh_array[cube_count];
+    i32 cube_count = array_count(cube_positions);
+    Mesh cube_mesh_array[array_count(cube_positions)];
 
     u32 cube_vertex_array;
     glGenVertexArrays(1, &cube_vertex_array);
@@ -447,8 +499,8 @@ main(i32 argc, char **argv) {
 #if 1
         {
             Mat4 model = HMM_Mat4d(1.0f);
-            model = HMM_Multiply(model, HMM_Translate(light_pos));
-            model = HMM_Multiply(model, HMM_Scale(vec3(0.3f, 0.3f, 0.3f)));
+            model = HMM_MultiplyMat4(model, HMM_Translate(light_pos));
+            model = HMM_MultiplyMat4(model, HMM_Scale(vec3(0.3f, 0.3f, 0.3f)));
 
             glUseProgram(light_shader);
 
@@ -471,9 +523,9 @@ main(i32 argc, char **argv) {
             Rotation rotation = cube_rotations[i];
 
             Mat4 model = HMM_Mat4d(1.0f);
-            model = HMM_Multiply(model, HMM_Translate(position));
-            model = HMM_Multiply(model, HMM_Rotate(rotation.angle, rotation.axis));
-            model = HMM_Multiply(model, HMM_Scale(scale));
+            model = HMM_MultiplyMat4(model, HMM_Translate(position));
+            model = HMM_MultiplyMat4(model, HMM_Rotate(rotation.angle, rotation.axis));
+            model = HMM_MultiplyMat4(model, HMM_Scale(scale));
             // Mat4 mvp = projection * view * model;
 
             glUseProgram(mesh.shader_program);

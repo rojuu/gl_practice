@@ -37,6 +37,6 @@ if not exist glew32.dll (
     robocopy %GLEW_BIN% . glew32.dll
 )
 
-cl %CommonCompilerFlags% ..\src\main.cpp /link /subsystem:windows %CommonLinkerFlags% /out:%EXE_NAME%
+cl %CommonCompilerFlags% ..\src\main.c /link /subsystem:windows %CommonLinkerFlags% /out:%EXE_NAME%
 popd
 echo Done
