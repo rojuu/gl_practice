@@ -74,8 +74,6 @@ compile_shader(const char *vertex_shader_code, const char *fragment_shader_code)
     i32 result = 0;
     i32 info_log_length;
 
-    char error_message_buffer[1024];
-
     // Compile Vertex Shader
     glShaderSource(vertex_shader_id, 1, &vertex_shader_code, NULL);
     glCompileShader(vertex_shader_id);
@@ -84,6 +82,7 @@ compile_shader(const char *vertex_shader_code, const char *fragment_shader_code)
     glGetShaderiv(vertex_shader_id, GL_COMPILE_STATUS, &result);
     glGetShaderiv(vertex_shader_id, GL_INFO_LOG_LENGTH, &info_log_length);
     if(info_log_length > 0) {
+        char error_message_buffer[info_log_length];
         glGetShaderInfoLog(vertex_shader_id, info_log_length, NULL, error_message_buffer);
         log_error_message("%s\n", error_message_buffer);
     }
@@ -96,6 +95,7 @@ compile_shader(const char *vertex_shader_code, const char *fragment_shader_code)
     glGetShaderiv(fragment_shader_id, GL_COMPILE_STATUS, &result);
     glGetShaderiv(fragment_shader_id, GL_INFO_LOG_LENGTH, &info_log_length);
     if(info_log_length > 0) {
+        char error_message_buffer[info_log_length];
         glGetShaderInfoLog(fragment_shader_id, info_log_length, NULL, error_message_buffer);
         log_error_message("%s\n", error_message_buffer);
     }
@@ -110,6 +110,7 @@ compile_shader(const char *vertex_shader_code, const char *fragment_shader_code)
     glGetProgramiv(program_id, GL_LINK_STATUS, &result);
     glGetProgramiv(program_id, GL_INFO_LOG_LENGTH, &info_log_length);
     if(info_log_length > 0) {
+        char error_message_buffer[info_log_length];
         glGetProgramInfoLog(program_id, info_log_length, NULL, error_message_buffer);
         log_error_message("%s\n", error_message_buffer);
     }
