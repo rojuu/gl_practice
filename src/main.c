@@ -35,6 +35,9 @@ typedef struct {
     u32 height;
 } RenderContext;
 
+//TODO: Figure out how I want to do logging.
+// Not too sure about this current style of logging.
+
 //TODO: Figure out the right length for the buffers in these
 // log message functions. 1024 might be a bit of an overkill.
 #define buffer_size 1024
@@ -336,16 +339,16 @@ main() {
         vec3(-1.3f,  1.0f, -1.5f),
     };
     Rotation cube_rotations[] = {
-        {vec3(0, 1, 0), 30},
-        {vec3(1, 1, 1), 24},
-        {vec3(0, 1, 1), 30},
-        {vec3(1, 1, 0), 60},
-        {vec3(1, 1, 0), 60},
-        {vec3(0, 1, 1), 30},
-        {vec3(1, 1, 1), 24},
-        {vec3(0, 1, 1), 30},
-        {vec3(0, 1, 1), 30},
-        {vec3(1, 0, 1), 10},
+        { .axis = vec3(0, 1, 0), .angle = 30 },
+        { .axis = vec3(1, 1, 1), .angle = 24 },
+        { .axis = vec3(0, 1, 1), .angle = 30 },
+        { .axis = vec3(1, 1, 0), .angle = 60 },
+        { .axis = vec3(1, 1, 0), .angle = 60 },
+        { .axis = vec3(0, 1, 1), .angle = 30 },
+        { .axis = vec3(1, 1, 1), .angle = 24 },
+        { .axis = vec3(0, 1, 1), .angle = 30 },
+        { .axis = vec3(0, 1, 1), .angle = 30 },
+        { .axis = vec3(1, 0, 1), .angle = 10 },
     };
 
     i32 cube_count = array_count(cube_positions);

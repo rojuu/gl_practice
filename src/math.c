@@ -88,4 +88,4 @@ spherical_to_cartesian_vec3(f32 radius, f32 longtitude, f32 latitude) {
     f32 z = radius * HMM_CosF(latitude) * HMM_CosF(longtitude);
     Vec3 result = {.x = x, .y = y, .z = z};
     return result;
- }
+}
