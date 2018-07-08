@@ -40,15 +40,15 @@ clamp(f32 value, f32 _min, f32 _max) {
 // Normalize or zero
 static inline Vec3
 noz_vec3(Vec3 input) {
-    Vec3 zero = {};
-    Vec3 result = input.x || input.y || input.z ? HMM_NormalizeVec3(input) : zero;
+    //HMM normalize returns a zero vector if input is zero
+    Vec3 result = HMM_NormalizeVec3(input);
     return result;
 }
 
 static inline Vec2
 noz_vec2(Vec2 input) {
-    Vec2 zero = {};
-    Vec2 result = input.x || input.y ? HMM_NormalizeVec2(input) : zero;
+    //HMM normalize returns a zero vector if input is zero
+    Vec2 result = HMM_NormalizeVec2(input);
     return result;
 }
 
