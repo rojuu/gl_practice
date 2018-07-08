@@ -4,6 +4,8 @@
         "algorithm": "cpp",
         "chrono": "cpp",
         "limits": "cpp",
-        "cstdlib": "c"
+        "cstdlib": "c",
+        "xiosbase": "c",
+        "xlocale": "c"
     }
 }

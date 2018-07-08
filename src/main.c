@@ -30,8 +30,6 @@
 
 #include <assert.h>
 
-static const f32 PI = HMM_PI; // glm::pi<f32>();
-
 typedef struct {
     SDL_Window* window;
     SDL_GLContext gl_context;
@@ -255,7 +253,7 @@ resize_view(RenderContext* render_context, u32 width, u32 height) {
 }
 
 i32
-main(i32 argc, char** argv) {
+main() {
     // Init SDL stuff
     if(SDL_Init(SDL_INIT_VIDEO) < 0) {
         log_error_message("SDL_Error: %s\n", SDL_GetError());
@@ -420,8 +418,8 @@ main(i32 argc, char** argv) {
     // glUniform1i(glGetUniformLocation(basic_shader, "in_texture1"), 1);
 #endif
 
-    Vec3 light_pos = {1.2f, 1.0f, 2.0f};
-    Vec3 view_pos  = {0.0f, 2.0f, 3.0f};
+    Vec3 light_pos = { .x = 1.2f, .y = 1.0f, .z = 2.0f};
+    Vec3 view_pos  = { .x = 0.0f, .y = 2.0f, .z = 3.0f};
 
     glUseProgram(basic_shader);
     set_uniform_3f("object_color", 1.0f, 0.5f, 0.31f);

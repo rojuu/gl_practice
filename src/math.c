@@ -34,20 +34,20 @@ radians(f32 degrees) {
 static inline f32
 clamp(f32 value, f32 _min, f32 _max) {
     f32 result = min(_max, max(value, _min));
-    return value;
+    return result;
 }
 
 // Normalize or zero
 static inline Vec3
 noz_vec3(Vec3 input) {
-    Vec3 zero = {0};
+    Vec3 zero = {};
     Vec3 result = input.x || input.y || input.z ? HMM_NormalizeVec3(input) : zero;
     return result;
 }
 
 static inline Vec2
 noz_vec2(Vec2 input) {
-    Vec2 zero = {0};
+    Vec2 zero = {};
     Vec2 result = input.x || input.y ? HMM_NormalizeVec2(input) : zero;
     return result;
 }
@@ -86,6 +86,6 @@ spherical_to_cartesian_vec3(f32 radius, f32 longtitude, f32 latitude) {
     f32 x = radius * HMM_CosF(latitude) * HMM_SinF(longtitude);
     f32 y = radius * HMM_SinF(latitude);
     f32 z = radius * HMM_CosF(latitude) * HMM_CosF(longtitude);
-    Vec3 result = {x,y,z};
+    Vec3 result = {.x = x, .y = y, .z = z};
     return result;
-}
+ }
