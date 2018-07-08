@@ -26,7 +26,6 @@
 #include "types.c"
 #include "math.c"
 
-#include "shaders.h"
 #include "objects.h"
 
 #include <assert.h>
