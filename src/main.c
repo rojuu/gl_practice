@@ -67,7 +67,7 @@ log_error_message(const char* format, ...) {
 #undef buffer_size
 
 static u32
-compile_shader(const char *vertex_shader_code, const char *fragment_shader_code) {
+compile_shader(const char* vertex_shader_code, const char* fragment_shader_code) {
     u32 vertex_shader_id   = glCreateShader(GL_VERTEX_SHADER);
     u32 fragment_shader_id = glCreateShader(GL_FRAGMENT_SHADER);
 
@@ -163,7 +163,7 @@ free_file_contents(char* file_contents) {
 }
 
 static u32
-load_and_compile_shader(const char *vertex_shader_path, const char *fragment_shader_path) {
+load_and_compile_shader(const char* vertex_shader_path, const char* fragment_shader_path) {
     u32 program = 0;
 
     char* vertex_shader_source;
@@ -184,7 +184,7 @@ load_and_compile_shader(const char *vertex_shader_path, const char *fragment_sha
 }
 
 static u32
-load_texture(const char *filename, b32 flip_vertically_on_load, GLint internal_format, GLenum format) {
+load_texture(const char* filename, b32 flip_vertically_on_load, GLint internal_format, GLenum format) {
     u32 texture;
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
@@ -194,7 +194,7 @@ load_texture(const char *filename, b32 flip_vertically_on_load, GLint internal_f
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     i32 width, height, nr_channels;
     stbi_set_flip_vertically_on_load(flip_vertically_on_load);
-    u8 *data = stbi_load(filename, &width, &height, &nr_channels, 0);
+    u8* data = stbi_load(filename, &width, &height, &nr_channels, 0);
     if(data) {
         glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
@@ -207,19 +207,19 @@ load_texture(const char *filename, b32 flip_vertically_on_load, GLint internal_f
 }
 
 static inline u32
-load_texture_rgb(const char *filename, b32 flip_vertically_on_load) {
+load_texture_rgb(const char* filename, b32 flip_vertically_on_load) {
     u32 texture = load_texture(filename, flip_vertically_on_load, GL_RGB, GL_RGB);
     return texture;
 }
 
 static inline u32
-load_texture_rgba(const char *filename, b32 flip_vertically_on_load) {
+load_texture_rgba(const char* filename, b32 flip_vertically_on_load) {
     u32 texture = load_texture(filename, flip_vertically_on_load, GL_RGBA, GL_RGBA);
     return texture;
 }
 
 static inline void
-set_uniform_mat4(const char *name, Mat4 matrix) {
+set_uniform_mat4(const char* name, Mat4 matrix) {
     i32 shader;
     glGetIntegerv(GL_CURRENT_PROGRAM, &shader);
 
@@ -228,7 +228,7 @@ set_uniform_mat4(const char *name, Mat4 matrix) {
 }
 
 static inline void
-set_uniform_3f(const char *name, f32 f1, f32 f2, f32 f3) {
+set_uniform_3f(const char* name, f32 f1, f32 f2, f32 f3) {
     i32 shader;
     glGetIntegerv(GL_CURRENT_PROGRAM, &shader);
 
@@ -237,7 +237,7 @@ set_uniform_3f(const char *name, f32 f1, f32 f2, f32 f3) {
 }
 
 static inline void
-set_uniform_vec3(const char *name, Vec3 v) {
+set_uniform_vec3(const char* name, Vec3 v) {
     set_uniform_3f(name, v.x, v.y, v.z);
 }
 
@@ -256,7 +256,7 @@ resize_view(RenderContext* render_context, u32 width, u32 height) {
 }
 
 i32
-main(i32 argc, char **argv) {
+main(i32 argc, char** argv) {
     // Init SDL stuff
     if(SDL_Init(SDL_INIT_VIDEO) < 0) {
         log_error_message("SDL_Error: %s\n", SDL_GetError());
@@ -268,7 +268,7 @@ main(i32 argc, char **argv) {
     render_context.width = 512;
     render_context.height = 512;
 
-    SDL_Window *window = SDL_CreateWindow(
+    SDL_Window* window = SDL_CreateWindow(
         "GL_TEST",
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
