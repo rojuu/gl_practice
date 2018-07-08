@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <stdint.h>
+#include <stdarg.h>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmacro-redefined"
@@ -8,14 +10,10 @@
 #pragma clang diagnostic pop
 
 #include "GL/glew.h"
-// #include "glm/glm.hpp"
-// #include "glm/vec3.hpp"
-// #include "glm/gtc/type_ptr.hpp"
-// #include "glm/gtc/matrix_transform.hpp"
-#include <stdint.h>
-#include <stdarg.h>
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+
 #include <windows.h>
 
 #define array_count(x) ((sizeof(x) / sizeof(0 [x])) / ((size_t)(!(sizeof(x) % sizeof(0 [x])))))
