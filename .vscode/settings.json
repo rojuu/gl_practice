@@ -6,6 +6,7 @@
         "limits": "cpp",
         "cstdlib": "c",
         "xiosbase": "c",
-        "xlocale": "c"
+        "xlocale": "c",
+        "handmademath.h": "c"
     }
 }
