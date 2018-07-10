@@ -194,10 +194,12 @@ load_mesh_data_from_obj(const char* filename, MeshData* out_mesh_data) {
         switch(*file_contents) {
             //INCOMPLETE: We are not handling all possible obj cases.
             // Skip any lines starting with these
-            case 'm':
-            case 'u': //usemtl
-            case 's':
-            case 'o':
+            case 'm': // mtllib
+            case 'u': // usemtl
+            case 's': // smooth shading
+            case 'o': // object name
+            case 'l': // line segments
+            case 'g': // group name
             case '#': {
                 file_contents = find_next_line_in_string(file_contents);
                 continue;
