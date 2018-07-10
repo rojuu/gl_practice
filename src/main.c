@@ -21,19 +21,12 @@
 #define HANDMADE_MATH_IMPLEMENTATION
 #include "HandmadeMath.h"
 
-#include "types.c"
+#include "types.h"
 #include "math.c"
-
+#include "file.c"
 #include "objects.h"
 
 #include <assert.h>
-
-typedef struct {
-    SDL_Window* window;
-    SDL_GLContext gl_context;
-    u32 width;
-    u32 height;
-} RenderContext;
 
 //TODO: Figure out how I want to do logging.
 // Not too sure about this current style of logging.
@@ -123,53 +116,17 @@ compile_shader(const char* vertex_shader_code, const char* fragment_shader_code)
 }
 
 static u32
-read_file_contents(const char* filename, char** file_contents) {
-    u32 number_of_bytes_read = 0;
-    HANDLE file_handle = CreateFileA(filename,
-                                     GENERIC_READ,
-                                     0, 0,
-                                     OPEN_EXISTING,
-                                     FILE_ATTRIBUTE_NORMAL,
-                                     0);
-
-    if(file_handle == INVALID_HANDLE_VALUE) {
-        return 0;
-    }
-
-    LARGE_INTEGER large_integer;
-    if(!GetFileSizeEx(file_handle, &large_integer)) {
-        return 0;
-    }
-
-    u32 number_of_bytes = (u32)large_integer.QuadPart;
-
-    char* buffer = malloc(number_of_bytes);
-    if(!ReadFile(file_handle, buffer, number_of_bytes, (LPDWORD)&number_of_bytes_read, 0)) {
-        return 0;
-    }
-
-    *file_contents = buffer;
-
-    CloseHandle(file_handle);
-
-    return number_of_bytes;
-}
-
-static inline void
-free_file_contents(char* file_contents) {
-    free(file_contents);
-}
-
-static u32
 load_and_compile_shader(const char* vertex_shader_path, const char* fragment_shader_path) {
     u32 program = 0;
 
-    char* vertex_shader_source;
-    char* fragment_shader_source;
-    if(!read_file_contents(vertex_shader_path, &vertex_shader_source)) {
+    char* vertex_shader_source = 0;
+    char* fragment_shader_source = 0;
+    if(!read_text_file_contents(vertex_shader_path, &vertex_shader_source)) {
+        free_file_contents(vertex_shader_source);
         return 0;
     }
-    if(!read_file_contents(fragment_shader_path, &fragment_shader_source)) {
+    if(!read_text_file_contents(fragment_shader_path, &fragment_shader_source)) {
+        free_file_contents(fragment_shader_source);
         return 0;
     }
 
@@ -253,6 +210,12 @@ resize_view(RenderContext* render_context, u32 width, u32 height) {
     glViewport(0, 0, width, height);
 }
 
+static void
+run_tests() {
+    MeshData mesh_data;
+    load_mesh_data_from_obj("data\\nanosuit\\nanosuit.obj", &mesh_data);
+}
+
 i32
 main() {
     // Init SDL stuff
@@ -261,6 +224,11 @@ main() {
         return -1;
     }
     atexit(SDL_Quit);
+
+    //TODO: Have our own INTERNAL flag or something
+#ifndef NDEBUG 
+    run_tests();
+#endif
 
     RenderContext render_context;
     render_context.width = 512;

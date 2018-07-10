@@ -25,6 +25,13 @@ typedef hmm_vec4 Vec4;
 
 typedef hmm_mat4 Mat4;
 
+typedef struct {
+    SDL_Window* window;
+    SDL_GLContext gl_context;
+    u32 width;
+    u32 height;
+} RenderContext;
+
 //TODO: Make this a bitmask
 typedef struct {
     b32 left;
@@ -32,6 +39,14 @@ typedef struct {
     b32 up;
     b32 down;
 } KeyboardInput;
+
+typedef struct {
+    Vec3* vertices;
+    Vec3* normals;
+    Vec2* tex_coords;
+    i32* indices;
+    u32 count;
+} MeshData;
 
 typedef struct {
     u32 vao;
