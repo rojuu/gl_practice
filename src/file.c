@@ -147,6 +147,8 @@ obj_parse_normal(char* file_contents) {
     return result;
 }
 
+//TODO: Faces have up to three values in obj format, for example "1/1/1"
+// We are not accounting for that little feature of obj.
 static i32
 obj_parse_index(char* file_contents) {
     i32 result = 0;
