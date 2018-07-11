@@ -21,6 +21,12 @@ vec4(f32 x, f32 y, f32 z, f32 w) {
     return result;
 }
 
+static inline Vec3i
+vec3i(i32 x, i32 y, i32 z) {
+    Vec3i result = {.x = x, .y = y, .z = z};
+    return result;
+}
+
 #undef min
 #undef max
 #define min HMM_MIN

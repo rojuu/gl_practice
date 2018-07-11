@@ -23,6 +23,10 @@ typedef hmm_vec2 Vec2;
 typedef hmm_vec3 Vec3;
 typedef hmm_vec4 Vec4;
 
+typedef struct {
+    i32 x, y, z;
+} Vec3i;
+
 typedef hmm_mat4 Mat4;
 
 typedef struct {
@@ -44,8 +48,13 @@ typedef struct {
     Vec3* vertices;
     Vec3* normals;
     Vec2* tex_coords;
-    i32* indices;
-    u32 count;
+    Vec3i* vertex_indices;
+    Vec3i* tex_coord_indices;
+    Vec3i* normal_indices;
+    u32 vertices_count;
+    u32 normals_count;
+    u32 tex_coords_count;
+    u32 indices_count;
 } MeshData;
 
 typedef struct {

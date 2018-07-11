@@ -8,6 +8,8 @@
         "xiosbase": "c",
         "xlocale": "c",
         "handmademath.h": "c",
-        "locale": "c"
+        "locale": "c",
+        "system_error": "c",
+        "sstream": "c"
     }
 }

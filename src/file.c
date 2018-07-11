@@ -147,26 +147,95 @@ obj_parse_normal(char* file_contents) {
     return result;
 }
 
-//TODO: Faces have up to three values in obj format, for example "1/1/1"
-// We are not accounting for that little feature of obj.
-static i32
-obj_parse_index(char* file_contents) {
-    i32 result = 0;
+static char*
+find_next_non_whitespace_in_string(char* str) {
+    i32 counter = 0;
+    while(*str == ' ' || *str == '\t') {
+        str++;
+        counter++;
+        if(counter < 0) {
+            //We probably got some stupid data here, because we wrapped the int
+            return 0;
+        }
+    }
+    return str;
+}
 
-    if(!file_contents) {
-        return result;
+static char*
+find_next_digit_in_string(char* str) {
+    i32 counter = 0;
+    while(!isdigit(*str)) {
+        str++;
+        counter++;
+        if(counter < 0) {
+            //We probably got some stupid data here, because we wrapped the int
+            return 0;
+        }
+    }
+    return str;
+}
+
+static char*
+find_next_non_digit_in_string(char* str) {
+    i32 counter = 0;
+    while(isdigit(*str)) {
+        str++;
+        counter++;
+        if(counter < 0) {
+            //We probably got some stupid data here, because we wrapped the int
+            return 0;
+        }
+    }
+    return str;
+}
+
+static Vec3i
+obj_parse_single_index(char* file_contents, char** out_end_ptr) {
+    Vec3i result = {};
+    char* str_ptr = file_contents;
+
+    str_ptr = find_next_digit_in_string(str_ptr);
+    result.x = atoi(str_ptr);
+
+    str_ptr = find_next_non_digit_in_string(str_ptr);
+    str_ptr++;
+    if(*str_ptr != '/')
+        result.y = atoi(str_ptr);
+    
+    str_ptr = find_next_non_digit_in_string(str_ptr);
+    str_ptr++;
+    if(*str_ptr != '/')
+        result.z = atoi(str_ptr);
+
+    while(isdigit(*str_ptr)) {
+        str_ptr++;
     }
 
-    while(!isdigit(*file_contents) && *file_contents != '\0') {
-        file_contents++;
-    }
-    if(isdigit(*file_contents)) {
-        result = atoi(file_contents);
-    }
+    *out_end_ptr = str_ptr;
 
     return result;
 }
 
+static char*
+obj_parse_indices(char* file_contents, Vec3i* vertex_i, Vec3i* tex_coord_i, Vec3i* normal_i) {
+    if(!file_contents) {
+        return file_contents;
+    }
+
+    if(!vertex_i || !normal_i || !tex_coord_i) {
+        return file_contents;
+    }
+
+    *vertex_i    = obj_parse_single_index(file_contents, &file_contents);
+    *tex_coord_i = obj_parse_single_index(file_contents, &file_contents);
+    *normal_i    = obj_parse_single_index(file_contents, &file_contents);
+
+    return file_contents;
+}
+
+static void write_mesh_data_to_file(const char* filename, MeshData* mesh_data);
+
+//TODO: Properly test this with some edge cases
 static b32
 load_mesh_data_from_obj(const char* filename, MeshData* out_mesh_data) {
     char* file_contents;
@@ -179,10 +248,12 @@ load_mesh_data_from_obj(const char* filename, MeshData* out_mesh_data) {
     // because there are max one of each per line in an obj file
     u32 line_count = count_lines_in_file(file_contents);
     MeshData mesh_data = {
-        .vertices   = malloc(line_count * sizeof(Vec3)),
-        .normals    = malloc(line_count * sizeof(Vec3)),
-        .tex_coords = malloc(line_count * sizeof(Vec2)),
-        .indices    = malloc(line_count * sizeof(i32)),
+        .vertices          = malloc(line_count * sizeof(Vec3)),
+        .normals           = malloc(line_count * sizeof(Vec3)),
+        .tex_coords        = malloc(line_count * sizeof(Vec2)),
+        .vertex_indices    = malloc(line_count * sizeof(Vec3i)),
+        .tex_coord_indices = malloc(line_count * sizeof(Vec3i)),
+        .normal_indices    = malloc(line_count * sizeof(Vec3i)),
     };
 
     u32 vertex_count = 0;
@@ -190,8 +261,9 @@ load_mesh_data_from_obj(const char* filename, MeshData* out_mesh_data) {
     u32 tex_coord_count = 0;
     u32 index_count = 0;
 
+    char* fptr = file_contents;
     for(;;) {
-        switch(*file_contents) {
+        switch(*fptr) {
             //INCOMPLETE: We are not handling all possible obj cases.
             // Skip any lines starting with these
             case 'm': // mtllib
@@ -201,61 +273,63 @@ load_mesh_data_from_obj(const char* filename, MeshData* out_mesh_data) {
             case 'l': // line segments
             case 'g': // group name
             case '#': {
-                file_contents = find_next_line_in_string(file_contents);
+                fptr = find_next_line_in_string(fptr);
                 continue;
             } break;
 
             // Skip whitespace
             case '\t':
             case ' ': {
-                file_contents++;
+                fptr++;
                 continue;
             } break;
 
-            // Skip newlines (lf or crlf should both be handled)
+            // Skip newlines (lf or crlf should both be handled, not tested though)
             case '\r': {
-                if( *(file_contents+1) == '\n' ) {
-                    file_contents+=2;
+                if(*(fptr+1) == '\n') {
+                    fptr+=2;
                 } else {
-                    file_contents++;
+                    fptr++;
                 }
                 continue;
             } break;
-
             case '\n': {
-                file_contents++;
+                fptr++;
                 continue;
             } break;
 
             // Parse vertex data (positions,tex_coords,normals)
             case 'v': {
-                file_contents++;
-                switch(*file_contents) {
+                fptr++;
+                switch(*fptr) {
                     case ' ': {
-                        Vec3 vertex = obj_parse_vertex(file_contents);
+                        Vec3 vertex = obj_parse_vertex(fptr);
                         mesh_data.vertices[vertex_count++] = vertex;
-                        file_contents = find_next_line_in_string(file_contents);
+                        fptr = find_next_line_in_string(fptr);
                     } break;
 
                     case 't': {
-                        Vec2 tex_coord = obj_parse_tex_coord(file_contents);
+                        Vec2 tex_coord = obj_parse_tex_coord(fptr);
                         mesh_data.tex_coords[tex_coord_count++] = tex_coord;
-                        file_contents = find_next_line_in_string(file_contents);
+                        fptr = find_next_line_in_string(fptr);
                     } break;
 
                     case 'n': {
-                        Vec3 normal = obj_parse_normal(file_contents);
-                        mesh_data.normals[tex_coord_count++] = normal;
-                        file_contents = find_next_line_in_string(file_contents);
+                        Vec3 normal = obj_parse_normal(fptr);
+                        mesh_data.normals[normal_count++] = normal;
+                        fptr = find_next_line_in_string(fptr);
                     } break;
                 }
             } break;
 
             // Parse indices/faces
             case 'f': {
-                i32 index = obj_parse_index(file_contents);
-                mesh_data.indices[index_count++] = index;
-                file_contents = find_next_line_in_string(file_contents);
+                fptr = obj_parse_indices(fptr,
+                                         &mesh_data.vertex_indices[index_count],
+                                         &mesh_data.tex_coord_indices[index_count],
+                                         &mesh_data.normal_indices[index_count]);
+                index_count++;
+                fptr = find_next_line_in_string(fptr);
             } break;
 
             default:
@@ -263,16 +337,21 @@ load_mesh_data_from_obj(const char* filename, MeshData* out_mesh_data) {
                 break;
         }
 
-        if(*file_contents == '\0') {
+        if(*fptr == '\0') {
             break;
         }
     }
 
-    u32 final_count = vertex_count;
+    mesh_data.vertices_count = vertex_count;
+    mesh_data.normals_count = normal_count;
+    mesh_data.tex_coords_count = tex_coord_count;
+    mesh_data.indices_count = index_count;
 
     free_file_contents(file_contents);
 
     *out_mesh_data = mesh_data;
+
+    write_mesh_data_to_file("data\\nanosuit\\nanosuit_remade.obj", &mesh_data);
     return 1;
 }
 
@@ -288,4 +367,67 @@ make_mesh_from_obj(const char* filename, Mesh* mesh) {
     (void) filename;
     (void) mesh;
     return 0;
+}
+
+static void
+write_mesh_data_to_file(const char* filename, MeshData* mesh_data) {
+    char buffer[1024];
+
+    FILE* file_handle;
+    if(fopen_s(&file_handle, filename, "w")) {
+        return;
+    }
+
+    u32 i;
+    for(i = 0; i < mesh_data->vertices_count; i++) {
+        Vec3 vertex = mesh_data->vertices[i];
+        if(sprintf_s(buffer, 1024, "v %f %f %f\n", vertex.x, vertex.y, vertex.z) < 0) {
+            assert(!"write_mesh_data_to_file: sprintf_s error");
+        }
+
+        if(fputs(buffer, file_handle) < 0) {
+            assert(!"write_mesh_data_to_file: fputs error");
+        }
+    }
+
+    for(i = 0; i < mesh_data->normals_count; i++) {
+        Vec3 normal = mesh_data->normals[i];
+        if(sprintf_s(buffer, 1024, "vn %f %f %f\n", normal.x, normal.y, normal.z) < 0) {
+            assert(!"write_mesh_data_to_file: sprintf_s error");
+        }
+
+        if(fputs(buffer, file_handle) < 0) {
+            assert(!"write_mesh_data_to_file: fputs error");
+        }
+    }
+
+    for(i = 0; i < mesh_data->tex_coords_count; i++) {
+        Vec2 tex_coord = mesh_data->tex_coords[i];
+        if(sprintf_s(buffer, 1024, "vt %f %f\n", tex_coord.x, tex_coord.y) < 0) {
+            assert(!"write_mesh_data_to_file: sprintf_s error");
+        }
+
+        if(fputs(buffer, file_handle) < 0) {
+            assert(!"write_mesh_data_to_file: fputs error");
+        }
+    }
+
+    for(i = 0; i < mesh_data->indices_count; i++) {
+        Vec3i vertex_index = mesh_data->vertex_indices[i];
+        Vec3i tex_coord_index = mesh_data->tex_coord_indices[i];
+        Vec3i normal_index = mesh_data->normal_indices[i];
+
+        if(sprintf_s(buffer, 1024, "f %d/%d/%d %d/%d/%d %d/%d/%d\n",
+                     vertex_index.x, vertex_index.y, vertex_index.z,
+                     tex_coord_index.x, tex_coord_index.y, tex_coord_index.z,
+                     normal_index.x, normal_index.y, normal_index.z)
+                        < 0)
+        {
+            assert(!"write_mesh_data_to_file: sprintf_s error");
+        }
+
+        if(fputs(buffer, file_handle) < 0) {
+            assert(!"write_mesh_data_to_file: fputs error");
+        }
+    }
 }
