@@ -201,7 +201,7 @@ obj_parse_single_index(char* file_contents, char** out_end_ptr) {
     str_ptr++;
     if(*str_ptr != '/')
         result.y = atoi(str_ptr);
-    
+
     str_ptr = find_next_non_digit_in_string(str_ptr);
     str_ptr++;
     if(*str_ptr != '/')
@@ -232,8 +232,6 @@ obj_parse_indices(char* file_contents, Vec3i* vertex_i, Vec3i* tex_coord_i, Vec3
 
     return file_contents;
 }
-
-static void write_mesh_data_to_file(const char* filename, MeshData* mesh_data);
 
 //TODO: Properly test this with some edge cases
 static b32
@@ -351,22 +349,85 @@ load_mesh_data_from_obj(const char* filename, MeshData* out_mesh_data) {
 
     *out_mesh_data = mesh_data;
 
-    write_mesh_data_to_file("data\\nanosuit\\nanosuit_remade.obj", &mesh_data);
     return 1;
 }
 
 static inline Mesh
-make_mesh_from_mesh_data(MeshData mesh_data) {
-    (void) mesh_data;
+make_mesh_from_mesh_data(MeshData* mesh_data) {
     Mesh mesh = {};
+
+    mesh.count = mesh_data->vertices_count / 3;
+
+    // u32 vertex_buffer;
+    // glGenBuffers(1, &vertex_buffer);
+    // glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+    // glBufferData(GL_ARRAY_BUFFER, sizeof(mesh_data->vertices), mesh_data->vertices, GL_STATIC_DRAW);
+
+    // u32 normal_buffer;
+    // glGenBuffers(1, &normal_buffer);
+    // glBindBuffer(GL_ARRAY_BUFFER, normal_buffer);
+    // glBufferData(GL_ARRAY_BUFFER, sizeof(mesh_data->normals), mesh_data->normals, GL_STATIC_DRAW);
+
+    u32 vertex_array;
+    glGenVertexArrays(1, &vertex_array);
+    glBindVertexArray(vertex_array);
+
+    u32 vertex_element_buffer;
+    glGenBuffers(1, &vertex_element_buffer);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vertex_element_buffer);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(mesh_data->vertex_indices), mesh_data->vertex_indices, GL_STATIC_DRAW);
+    u32 vertex_buffer;
+    glGenBuffers(1, &vertex_buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(mesh_data->vertices), mesh_data->vertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+
+    u32 normal_element_buffer;
+    glGenBuffers(1, &normal_element_buffer);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, normal_element_buffer);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(mesh_data->normal_indices), mesh_data->normal_indices, GL_STATIC_DRAW);
+    u32 normal_buffer;
+    glGenBuffers(1, &normal_buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, normal_buffer);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(mesh_data->normals), mesh_data->normals, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(1);
+
+    // u32 color_buffer;
+    // glGenBuffers(1, &color_buffer);
+    // glBindBuffer(GL_ARRAY_BUFFER, color_buffer);
+    // glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    // glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_colors), vertex_colors, GL_STATIC_DRAW);
+    // glEnableVertexAttribArray(1);
+
+    // u32 texture_element_buffer;
+    // glGenBuffers(1, &texture_element_buffer);
+    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, texture_element_buffer);
+    // glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(mesh_data->tex_coord_indices), mesh_data->tex_coord_indices, GL_STATIC_DRAW);
+    // u32 tex_coord_buffer;
+    // glGenBuffers(1, &tex_coord_buffer);
+    // glBindBuffer(GL_ARRAY_BUFFER, tex_coord_buffer);
+    // glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, 0);
+    // glBufferData(GL_ARRAY_BUFFER, sizeof(mesh_data->tex_coords), mesh_data->tex_coords, GL_STATIC_DRAW);
+    // glEnableVertexAttribArray(2);
+
+    mesh.vao = vertex_array;
+
     return mesh;
 }
 
 static b32
 make_mesh_from_obj(const char* filename, Mesh* mesh) {
-    (void) filename;
-    (void) mesh;
-    return 0;
+    if(!mesh || !filename) return 0;
+
+    MeshData mesh_data;
+    b32 success = load_mesh_data_from_obj(filename, &mesh_data);
+    if(!success) return 0;
+
+    *mesh = make_mesh_from_mesh_data(&mesh_data);
+
+    return 1;
 }
 
 static void

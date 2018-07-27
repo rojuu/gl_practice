@@ -210,12 +210,6 @@ resize_view(RenderContext* render_context, u32 width, u32 height) {
     glViewport(0, 0, width, height);
 }
 
-static void
-run_tests() {
-    MeshData mesh_data;
-    load_mesh_data_from_obj("data\\nanosuit\\nanosuit.obj", &mesh_data);
-}
-
 i32
 main() {
     // Init SDL stuff
@@ -224,11 +218,6 @@ main() {
         return -1;
     }
     atexit(SDL_Quit);
-
-    //TODO: Have our own INTERNAL flag or something
-#ifndef NDEBUG 
-    run_tests();
-#endif
 
     RenderContext render_context;
     render_context.width = 512;
@@ -282,45 +271,18 @@ main() {
         return -1;
     }
 
-//Load textures
-#define USE_TEXTURES 0
-#if USE_TEXTURES
-    u32 texture0 = load_texture_rgb("data/textures/container.jpg", true);
-    u32 texture1 = load_texture_rgba("data/textures/awesomeface.png", true);
-    if(!texture0 ||
-       !texture1) {
-        debugLog("Error loading textures.\n");
-        return -1;
+    i32 mesh_count = 1;
+    Mesh meshes[mesh_count];
+
+    b32 success;
+    success = make_mesh_from_obj("data\\nanosuit\\nanosuit.obj", &meshes[0]);
+    if(!success) mesh_count = 0;
+
+    for(i32 i = 0; i < mesh_count; i++) {
+        meshes[i].shader_program = basic_shader;
     }
-#endif
 
-    Vec3 cube_positions[] = {
-        vec3( 0.0f,  0.0f,  0.0f),
-        vec3( 2.0f,  5.0f, -15.0f),
-        vec3(-1.5f, -2.2f, -2.5f),
-        vec3(-3.8f, -2.0f, -12.3f),
-        vec3( 2.4f, -0.4f, -3.5f),
-        vec3(-1.7f,  3.0f, -7.5f),
-        vec3( 1.3f, -2.0f, -2.5f),
-        vec3( 1.5f,  2.0f, -2.5f),
-        vec3( 1.5f,  0.2f, -1.5f),
-        vec3(-1.3f,  1.0f, -1.5f),
-    };
-    Rotation cube_rotations[] = {
-        { .axis = vec3(0, 1, 0), .angle = 30 },
-        { .axis = vec3(1, 1, 1), .angle = 24 },
-        { .axis = vec3(0, 1, 1), .angle = 30 },
-        { .axis = vec3(1, 1, 0), .angle = 60 },
-        { .axis = vec3(1, 1, 0), .angle = 60 },
-        { .axis = vec3(0, 1, 1), .angle = 30 },
-        { .axis = vec3(1, 1, 1), .angle = 24 },
-        { .axis = vec3(0, 1, 1), .angle = 30 },
-        { .axis = vec3(0, 1, 1), .angle = 30 },
-        { .axis = vec3(1, 0, 1), .angle = 10 },
-    };
-
-    i32 cube_count = array_count(cube_positions);
-    Mesh cube_mesh_array[array_count(cube_positions)];
+    const int cube_triangle_count = array_count(cube_vertex_positions) / 3;
 
     u32 cube_vertex_array;
     glGenVertexArrays(1, &cube_vertex_array);
@@ -370,23 +332,6 @@ main() {
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(0);
 
-    //Cube transform data;
-    const int cube_triangle_count = array_count(cube_vertex_positions) / 3;
-
-    for(i32 i = 0; i < cube_count; ++i) {
-        cube_mesh_array[i].vao           = cube_vertex_array;
-        cube_mesh_array[i].count         = cube_triangle_count;
-        cube_mesh_array[i].shader_program = basic_shader;
-    }
-
-#if USE_TEXTURES
-    glUseProgram(basic_shader);
-    set_unfirorm1i("in_texture_0", 0);
-    set_unfirorm1i("in_texture_1", 1);
-    // glUniform1i(glGetUniformLocation(basic_shader, "in_texture0"), 0);
-    // glUniform1i(glGetUniformLocation(basic_shader, "in_texture1"), 1);
-#endif
-
     Vec3 light_pos = { .x = 1.2f, .y = 1.0f, .z = 2.0f};
     Vec3 view_pos  = { .x = 0.0f, .y = 2.0f, .z = 3.0f};
 
@@ -396,6 +341,8 @@ main() {
     set_uniform_vec3("light_pos", light_pos);
     set_uniform_vec3("view_pos", view_pos);
 
+    f32 obj_scale = 1;
+
     b32 running = true;
     f64 current_time = (f32)SDL_GetPerformanceCounter() /
                       (f32)SDL_GetPerformanceFrequency();
@@ -404,6 +351,7 @@ main() {
     i32 frame_counter = 0;
     i32 last_frame_count = 0;
     f64 last_fps_time = 0;
+    i32 delta_frames = 0;
     while(running) {
         last_time = current_time;
         current_time = (f64)SDL_GetPerformanceCounter() /
@@ -414,12 +362,13 @@ main() {
         ++frame_counter;
         if(current_time >= (last_fps_time + 1.f)) {
             last_fps_time    = current_time;
-            i32 delta_frames = frame_counter - last_frame_count;
+            delta_frames= frame_counter - last_frame_count;
             last_frame_count = frame_counter;
-            char title[64];
-            sprintf(title, "FPS: %d", delta_frames);
-            SDL_SetWindowTitle(window, title);
         }
+
+        char title[64];
+        sprintf(title, "FPS: %d, obj_scale: %f", delta_frames, obj_scale);
+        SDL_SetWindowTitle(window, title);
 
         SDL_Event event;
         while(SDL_PollEvent(&event)) {
@@ -451,6 +400,11 @@ main() {
                         } break;
                     }
                 } break;
+
+                case SDL_MOUSEWHEEL: {
+                    obj_scale += 0.01f * (f32)event.wheel.y;
+                    obj_scale = HMM_MAX(obj_scale, 0);
+                }
             }
         }
 
@@ -465,14 +419,6 @@ main() {
             vec3(0, 0, 0),
             vec3(0, 1, 0)
         );
-
-// Rotate cubes
-#if 1
-        for(i32 i = 0; i < cube_count; i++) {
-            float rotation_amount   = delta_time * 100;
-            cube_rotations[i].angle = fmod(cube_rotations[i].angle + rotation_amount, 360);
-        }
-#endif
 
 // Draw light source
 #if 1
@@ -492,14 +438,14 @@ main() {
         }
 #endif
 
-// Draw cubes
+// Draw meshes
 #if 1
-        for(i32 i = 0; i < cube_count; i++) {
+        for(i32 i = 0; i < mesh_count; i++) {
             // Vec3 scale = cubeScales[i];
-            Vec3 scale = vec3(1.0f, 1.0f, 1.0f);
-            Vec3 position = cube_positions[i];
-            Mesh mesh = cube_mesh_array[i];
-            Rotation rotation = cube_rotations[i];
+            Vec3 scale = vec3(obj_scale, obj_scale, obj_scale);
+            Vec3 position = vec3(0, 0, 0);
+            Mesh mesh = meshes[i];
+            Rotation rotation = { .axis = vec3(1,0,0), .angle = 0 };
 
             Mat4 model = HMM_Mat4d(1.0f);
             model = HMM_MultiplyMat4(model, HMM_Translate(position));
@@ -513,10 +459,6 @@ main() {
             set_uniform_mat4("view", view);
             set_uniform_mat4("projection", projection);
 
-            // glActiveTexture(GL_TEXTURE0);
-            // glBindTexture(GL_TEXTURE_2D, texture0);
-            // glActiveTexture(GL_TEXTURE1);
-            // glBindTexture(GL_TEXTURE_2D, texture1);
             glBindVertexArray(mesh.vao);
             glDrawArrays(GL_TRIANGLES, 0, mesh.count);
         }
